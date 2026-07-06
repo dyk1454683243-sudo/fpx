@@ -159,6 +159,13 @@ class LotManager:
             FpxLotCreateError: Создание лота не удалось
         '''
         try:
+            if not lot_creation_fields.validate():
+                raise fpx_err.FpxValidateError(
+                    'Не удалось валидировать объект,'
+                    'Вы не передали что-то из этого списка:'
+                    'self.price, self.amount, self.short_desc_ru, self.short_desc_en'
+                    'где self это ваш объект LotCreationFields'
+                )
             response = await self._account._client.create_lot(lot_creation_fields)
             if response.status_code == 200:
                 return True

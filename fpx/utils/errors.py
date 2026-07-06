@@ -32,6 +32,12 @@ class FpxHandlerError(FpxError):
 
 # аккаунт
 
+class FpxValidateError(FpxAccountError):
+    '''Неверный объект'''
+    def __init__(self, message='Неверный объект.'):
+        super().__init__(message)
+
+
 class FpxLotCreateError(FpxAccountError):
     '''Не удалось создать лот'''
     def __init__(self, message='Не удалось создать лот.'):

@@ -190,6 +190,13 @@ class LotCreationFields:
         f = self.get_field('fields[images]')
         f.value = ','.join(str(i) for i in images)
 
+    def validate(self):
+        '''Валидация объекта'''
+        required = [self.price, self.amount, self.short_desc_ru, self.short_desc_en]
+        if all(v is not None for v in required):
+            return True
+        return False
+
 @dataclass
 class LotInfo:
     name: str
