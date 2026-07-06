@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fpx-engine"
-version = "0.7.1"
+version = "0.7.2"
 authors = [
   { name="Be My Code", email="gettofarmila@gmail.com" },
 ]
@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
     "httpx[http2,socks]>=0.24.0",
     "beautifulsoup4>=4.12.0",
+    "aiofiles>=25.1.0",
 ]
 [project.optional-dependencies]
 redis = ["redis[hiredis]>=5.0.0"]
@@ -41,5 +42,6 @@ select = ["E", "F", "I", "W"]
 [tool.mypy]
 python_version = "3.10"
 strict = false
+[[tool.mypy.overrides]]
+module = "aiofiles.*"
 ignore_missing_imports = true
-

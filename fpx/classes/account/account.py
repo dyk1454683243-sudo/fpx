@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
+import aiofiles
+
 from fpx._api._client import FunPayClient
 from fpx._parsers import FpxParser
 from fpx.classes.account.subclasses.addons import AddonsManager
@@ -41,3 +43,20 @@ class Account:
         self.editor = FunPayEditor(self)
         self.review = ReviewManager(self)
         self.category = CategoryManager(self)
+
+    async def upload_image(self, file_path):
+        '''
+        Загрузка изображения на FunPay.
+        Args:
+            file_path (str): Путь до файла изображения.
+        Returns:
+            int: ID изображения на FunPay
+
+        Raises:
+            FpxRequestError: Ошибка загрузки.
+        '''
+        async with aiofiles.open(file_path, mode='rb') as f:
+            image_data = await f.read()
+
+        result = await self._client.upload_image(image_data)
+        return result['fileId']

@@ -33,6 +33,26 @@ class FunPayClient:
         r = await self._account._request_engine.execute('POST', '/runner/', data=payload, headers=headers)
         return r.json()
 
+    async def send_image_request(self, node_name, last_msg, image_id):
+        request_data = {
+            "action": "chat_message",
+            "data": {
+                "node": node_name,
+                "last_message": last_msg,
+                "content": '',
+                'image_id': image_id
+            }
+        }
+        payload = {
+            'request': json.dumps(request_data)
+        }
+        headers = {
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": f"https://funpay.com/chat/?node={node_name.split('-')[-1]}"
+        }
+        r = await self._account._request_engine.execute('POST', '/runner/', data=payload, headers=headers)
+        return r.json()
+
     async def get_current_chat(self, chat_id):
         r = await self._account._request_engine.execute('GET', f'/chat/?node={chat_id}')
         return r.text
@@ -156,3 +176,14 @@ class FunPayClient:
     async def get_lot_category(self, lot_category_id):
         r = await self._account._request_engine.execute('GET', f'/lots/{lot_category_id}/')
         return r.text
+
+    async def upload_image(self, file_bytes):
+        headers = {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        r = await self.client.request(
+            'POST', '/file/addChatImage',
+            files={"file": ("image.png", file_bytes, "image/png")},
+            headers=headers
+        )
+        return r.json()

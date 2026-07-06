@@ -123,3 +123,35 @@ class ChatManager:
         self._account.data._csrf_token = chat.csrf_token
         self._account.data.user_id = chat.user_id
         return chat
+
+    async def send_image(self, chat_id, image_id):
+        '''
+        Отправка изображения в чат
+        Args:
+            chat_id (str): ID чата
+            image_id (str): ID изображения на фанпей
+                получить на fp.account.upload_image
+        Returns:
+            dict: Словарь, которым отвечает фанпей
+                в формате {'objects': [], 'response': {'error': None}},
+                если требуется, можно проверять if .send_message() / if not .send_message
+                при ошибке пункт Raises
+        Raises:
+            FpxMessageNotDelivered: Если не удалось отправить сообщение.
+        '''
+        step = f'запрос данных чата ID {chat_id}'
+        try:
+            if chat_id not in self._account.data._node_names or not self._account.data._csrf_token:
+                await self.get_chat_data(chat_id)
+            step = f'POST запрос на отправку изображения {image_id} в чат ID {chat_id}'
+            response = await self._account._client.send_image_request(
+                self._account.data._node_names[chat_id], -1, image_id
+            )
+            inner_response = response.get('response', {})
+        except Exception as e:
+            raise fpx_err.FpxMessageDeliverError(f'Не удалось выполнить {step}. Ошибка: {e}')
+        if inner_response.get('error') is None:
+            return response
+        else:
+            error_msg = inner_response.get('error', 'Неизвестная ошибка')
+            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_msg}')

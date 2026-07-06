@@ -82,6 +82,23 @@ for chat in chats:
 await fp.account.chat.send_message('12345678', 'Привет')
 ```
 
+### `await fp.account.chat.send_image(chat_id, image_id)`
+
+Отправить изображение в чат по его ID.
+
+```python
+image_id = await fp.account.upload_image('photo.jpg')
+await fp.account.chat.send_image('12345678', image_id)
+```
+
+**Аргументы:**
+- `chat_id` (str) -- ID чата.
+- `image_id` (str) -- ID изображения на FunPay, полученный через `fp.account.upload_image`.
+
+**Возвращает** словарь ответа от FunPay.
+
+**Исключения:** `FpxMessageDeliverError`.
+
 ### `await fp.account.chat.get_chat_data(chat_id)`
 
 Получает технические данные чата (csrf_token, node_name, последнее сообщение).
