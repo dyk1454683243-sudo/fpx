@@ -32,9 +32,14 @@ class FpxHandlerError(FpxError):
 
 # аккаунт
 
+class FpxLotCreateError(FpxAccountError):
+    '''Не удалось создать лот'''
+    def __init__(self, message='Не удалось создать лот.'):
+        super().__init__(message)
+
 class FpxAuthError(FpxAccountError):
-    '''Неверный gkey'''
-    def __init__(self, message='Передан неверный gkey.'):
+    '''Переданы неверные куки'''
+    def __init__(self, message='Переданы неверные куки.'):
         super().__init__(message)
 
 class FpxGetChatsError(FpxAccountError):

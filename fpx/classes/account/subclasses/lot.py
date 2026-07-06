@@ -1,4 +1,4 @@
-from fpx.models.lots import CurrentLotInfo, LotEditor
+from fpx.models.lots import CurrentLotInfo, FieldOptions, LotCreationFields, LotEditor, LotField
 from fpx.utils import errors as fpx_err
 
 
@@ -110,3 +110,59 @@ class LotManager:
             return response
         except Exception as e:
             raise fpx_err.FpxRaisingLotError(message=str(e))
+
+    async def get_node_editor_data(self, node_id: int | str):
+        '''
+        Запрос нужных филдов для создания лота
+
+        Args:
+            node_id (int | str): Айди категории лота
+        Returns:
+            LotCreationFields: Объект, который нужно редактировать
+                встроенными в него функциями
+                подробнее в https://fpx.readthedocs.io/ru/latest/lot_creator/
+        Raises:
+            FpxGetLotEditorInfoError: Ошибка запроса данных редактора лота
+        '''
+        try:
+            stage = 'запроса данных с FunPay'
+            html = await self._account._client.get_node_editor_data(node_id)
+            stage = 'парсинга данных'
+            data = self._account._parser.parse_create_lot_page(html)
+        except Exception as e:
+            raise fpx_err.FpxGetLotEditorInfoError(f'При выполнении {stage} произошла ошибка: {e}')
+        base_fields = ['csrf_token', 'form_created_at', 'offer_id', 'node_id', 'location', 'deleted']
+        main_data = {f'_{k}': v for k, v in data.items() if k in base_fields}
+        other_fields = []
+        for k, v in data.items():
+            if k not in base_fields:
+                field_options = None
+                if v:
+                    field_options = []
+                    for option in v:
+                        field_options.append(FieldOptions(key=list(option.values())[0], value=list(option.keys())[0]))
+                other_fields.append(LotField(key=k, options=field_options))
+        lot = LotCreationFields(fields=other_fields, **main_data)
+        return lot
+
+    async def create_lot(self, lot_creation_fields: LotCreationFields):
+        '''
+        Создание лота.
+        Args:
+            lot_creation_fields (LotCreationFields): Объект,
+                получаемый в self.get_node_editor_data,
+                и настраиваемый там же, подробнее о настройке
+                в https://fpx.readthedocs.io/ru/latest/lot_creator/
+        Returns:
+            bool: True если всё удалось
+        Raises:
+            FpxLotCreateError: Создание лота не удалось
+        '''
+        try:
+            response = await self._account._client.create_lot(lot_creation_fields)
+            if response.status_code == 200:
+                return True
+            else:
+                raise fpx_err.FpxRequestError(f'Сервер не ответил успешно. Код ошибки: {response.status_code}')
+        except Exception as e:
+            raise fpx_err.FpxLotCreateError(f'При создании лота произошла ошибка: {e}')

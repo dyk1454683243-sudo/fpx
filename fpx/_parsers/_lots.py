@@ -134,3 +134,61 @@ class LotParser(BaseParser):
                 except Exception as e:
                     logger.debug(f'При парсинге конкретного текстового поля произошла ошибка: {e}')
         return result
+
+
+    @classmethod
+    def parse_create_lot_page(cls, html_content):
+        ''' https://funpay.com/lots/offerEdit?node=... '''
+        soup = BeautifulSoup(html_content, 'html.parser')
+        result = {}
+        hidden_inputs = soup.find_all('input', type='hidden')
+        if not hidden_inputs:
+            raise fpx_err.FpxNullDataError('Не найдено вводных данных в редакторе лота. Возможно слетела сессия')
+        result = {tag.get('name'): tag.get('value', '') for tag in hidden_inputs if tag.get('name')}
+        selects = soup.find_all('select')
+        if not selects:
+            raise fpx_err.FpxNullDataError(
+                'Ни одна выборка в редакторе лотов не найдена. Проверьте актуальность сессии'
+            )
+        for s in selects:
+            try:
+                name = s.get('name', '')
+                options = s.find_all('option')
+                value_list = []
+                for option in options:
+                    value_name = option.get_text(strip=True)
+                    value = option.get('value', '')
+                    if value_name and value:
+                        value_list.append({value_name: value})
+                result[name] = value_list
+            except Exception as e:
+                logger.debug(f'При парсинге конкретной выборки произошла ошибка: {e}')
+        inputs = soup.find_all('input', class_='form-control')
+        if not inputs:
+            inputs = [
+                i for i in soup.find_all('input')
+                if i.get('name') and i.get('type') in ['text', 'number', None]
+                and i.get('type') != 'hidden'
+            ]
+        if not inputs:
+            logger.debug('Ни одно поле для ввода в редакторе лотов не найдено. Возможно всё в порядке')
+        else:
+            for i in inputs:
+                try:
+                    name = i.get('name')
+                    if name:
+                        result[name] = i.get('value', '')
+                except Exception as e:
+                    logger.debug(f'При парсинге конкретного поля для ввода произошла ошибка: {e}')
+        textareas = soup.find_all('textarea')
+        if not textareas:
+            logger.debug('При парсинге редактора лотов не найдено ни одного текстового поля. Возможно всё в порядке')
+        else:
+            for t in textareas:
+                try:
+                    name = t.get('name')
+                    if name:
+                        result[name] = t.get_text().strip()
+                except Exception as e:
+                    logger.debug(f'При парсинге конкретного текстового поля произошла ошибка: {e}')
+        return result

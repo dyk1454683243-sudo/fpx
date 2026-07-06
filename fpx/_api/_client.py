@@ -88,6 +88,10 @@ class FunPayClient:
         r = await self._account._request_engine.execute('GET', f'/lots/offerEdit?offer={lot_id}')
         return r.text
 
+    async def get_node_editor_data(self, node_id):
+        r = await self._account._request_engine.execute('GET', f'/lots/offerEdit?node={node_id}')
+        return r.text
+
     async def edit_lot(self, lot, active=None):
         payload = {
             'form_created_at': lot.form_created_at,
@@ -107,6 +111,27 @@ class FunPayClient:
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'X-Requested-With': 'XMLHttpRequest',
             'Referer': f'https://funpay.com/lots/offerEdit?node={lot.node_id}&offer={lot.offer_id}&location=offer',
+        }
+        r = await self._account._request_engine.execute('POST', '/lots/offerSave', data=payload, headers=headers)
+        return r
+
+    async def create_lot(self, lot):
+        payload = {
+            'form_created_at': lot._form_created_at,
+            'offer_id': lot._offer_id,
+            'node_id': lot._node_id,
+            'location': lot._location,
+            'deleted': lot._deleted,
+            'active': 'on'
+        }
+        fields = {f.key: f.value for f in lot.fields}
+        payload.update(fields)
+        payload.pop('query', None)
+        headers = {
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Referer': f'https://funpay.com/lots/offerEdit?node={lot._node_id}',
+            'Origin': 'https://funpay.com',
         }
         r = await self._account._request_engine.execute('POST', '/lots/offerSave', data=payload, headers=headers)
         return r
