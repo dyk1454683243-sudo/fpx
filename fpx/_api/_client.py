@@ -187,3 +187,14 @@ class FunPayClient:
             headers=headers
         )
         return r.json()
+
+    async def find_category(self, target):
+        headers = {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        r = await self.client.request(
+            'POST', '/games/promoFilter',
+            data={'query': target},
+            headers=headers
+        )
+        return r.json()

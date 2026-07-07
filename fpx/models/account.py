@@ -103,3 +103,18 @@ class Review:
     text: str
     stars: int
     answer: str
+
+@dataclass
+class GameTitle:
+    id: int
+    name: str
+
+@dataclass
+class GameSubCategory:
+    id: int
+    sub_name: str
+
+@dataclass
+class Game:
+    title: GameTitle
+    subcategories: list[GameSubCategory] = field(default_factory=list)

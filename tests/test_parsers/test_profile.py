@@ -1,5 +1,6 @@
 """Тесты ProfileParser — баланс, профиль, продажи, главная."""
 import pytest
+
 from fpx._parsers._profile import ProfileParser
 from fpx.models.account import Balance
 from fpx.utils import errors as fpx_err

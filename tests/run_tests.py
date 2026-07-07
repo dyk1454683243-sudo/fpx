@@ -10,8 +10,8 @@
 Требования:
     pip install pytest pytest-asyncio beautifulsoup4 fpx-engine
 """
-import sys
 import subprocess
+import sys
 
 
 def main():

@@ -1,5 +1,4 @@
 """Тесты Router — декораторы, регистрация хендлеров, подключение под-роутеров."""
-import pytest
 from fpx.classes.runner.subclasses.router import Router
 
 

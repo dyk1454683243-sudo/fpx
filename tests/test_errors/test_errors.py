@@ -1,5 +1,6 @@
 """Тесты иерархии исключений fpx."""
 import pytest
+
 from fpx.utils import errors as fpx_err
 
 

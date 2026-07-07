@@ -1,18 +1,16 @@
 """Pytest configuration for fpx tests."""
-import sys
-from pathlib import Path
-import site
 
-try:
-    import fpx
-except ImportError:
-    for p in site.getsitepackages() + [site.getusersitepackages()]:
-        if p and (Path(p) / 'fpx').exists():
-            sys.path.insert(0, str(p))
-            break
+#try:
+#    import fpx
+#except ImportError:
+#    for p in site.getsitepackages() + [site.getusersitepackages()]:
+#        if p and (Path(p) / 'fpx').exists():
+#            sys.path.insert(0, str(p))
+#            break
+
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 
 @pytest.fixture

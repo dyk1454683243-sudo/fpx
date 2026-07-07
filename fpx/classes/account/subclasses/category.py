@@ -1,5 +1,6 @@
 
 
+from fpx.models.account import Game
 from fpx.models.lots import CategoryLastLot
 from fpx.utils import errors as fpx_err
 
@@ -65,3 +66,57 @@ class CategoryManager:
         for el in data:
             result.append(CategoryLastLot(category_id=chip_category_id, **el))
         return result
+
+    async def get_all_categories(self) -> list[Game]:
+        '''
+        Собирает все категории с фанпей.
+        Returns:
+            list[Game]: Список объектов, в каждой итерации
+                содержит в себе:
+                - title (GameTitle):
+                    Который содержит в себе:
+                    - id (int): ID категории
+                    - name (str): Название категории
+
+                - subcategories (GameSubCategory):
+                    - id (int): ID подкатегории
+                    - sub_name (str): Название подкатегории
+        Raises:
+            FpxRequestError: Ошибка запроса данных
+        '''
+        try:
+            html = await self._account._client.get_main_menu()
+            data = self._account._parser.parse_all_categories(html)
+        except Exception as e:
+            raise fpx_err.FpxRequestError(f'При сборе всех категорий произошла ошибка: {e}')
+        return data
+
+    async def find_category(self, target):
+        '''
+        Использует встроенный поиск фанпей,
+        ищет категории по совпадениям, допустимы
+        довольно критичные погрешности.
+
+        Args:
+            target (str): Слово, по которому идет поиск
+        Returns:
+            list[Game]: Список объектов, в каждой итерации
+                содержит в себе:
+                - title (GameTitle):
+                    Который содержит в себе:
+                    - id (int): ID категории
+                    - name (str): Название категории
+
+                - subcategories (GameSubCategory):
+                    - id (int): ID подкатегории
+                    - sub_name (str): Название подкатегории
+        Raises:
+            FpxRequestError: Ошибка запроса данных
+
+        '''
+        try:
+            html = await self._account._client.find_category(target)
+            data = self._account._parser.parse_all_categories(html['html'])
+        except Exception as e:
+            raise fpx_err.FpxRequestError(f'При сборе всех категорий произошла ошибка: {e}')
+        return data

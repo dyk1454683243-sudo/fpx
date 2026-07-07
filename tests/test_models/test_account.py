@@ -1,10 +1,10 @@
 """Тесты моделей аккаунта."""
-import pytest
-from fpx.models.account import (
-    Balance, Profile, CurReview, UserData, Order, Review
-)
-from fpx.models.lots import LotInfo
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+from fpx.models.account import Balance, CurReview, Order, Profile, Review, UserData
+from fpx.models.lots import LotInfo
 
 
 class TestAccountModels:

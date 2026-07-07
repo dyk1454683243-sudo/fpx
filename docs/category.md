@@ -81,6 +81,85 @@ lots = await fp.account.category.get_chip_category_last_lot(55)
 
 ---
 
+## Работа со всеми категориями
+
+Оба метода возвращают список игр с подкатегориями. Внутренняя структура одинаковая.
+
+### `await fp.account.category.get_all_categories()`
+
+Собирает **все** категории с главной страницы FunPay.  
+Парсит HTML, полученный через `get_main_menu()`.
+
+```python
+games = await fp.account.category.get_all_categories()
+
+for game in games:
+    print(f'{game.title.name} (id={game.title.id})')
+    for sub in game.subcategories:
+        print(f'  └ {sub.sub_name} (id={sub.id})')
+```
+
+**Возвращает:** `list[Game]`  
+**Raises:** `FpxRequestError` - при ошибке запроса.
+
+### `await fp.account.category.find_category(target)`
+
+Ищет категории через встроенный поиск FunPay.  
+`target: str` - слово или фраза для поиска. Допускает погрешности (нечёткий поиск на стороне фп).
+
+```python
+results = await fp.account.category.find_category('minecraft')
+for game in results:
+    print(game.title.name, [s.sub_name for s in game.subcategories])
+```
+
+**Возвращает:** `list[Game]`  
+**Raises:** `FpxRequestError` - при ошибке запроса.
+
+---
+
+## Вложенная структура: `Game` → `GameTitle` + `GameSubCategory`
+
+Оба новых метода `list[Game]`. Внутри два уровня вложенности.
+
+```
+Game
+├── title: GameTitle
+│   ├── id: int       — ID игры (число, не строка)
+│   └── name: str     — название игры
+└── subcategories: list[GameSubCategory]
+    └── GameSubCategory
+        ├── id: int       — ID подкатегории
+        └── sub_name: str — название подкатегории
+```
+
+**`Game`** - контейнер: хранит саму игру (`title`) и список её подкатегорий.
+
+**`GameTitle`** - идентификатор игры.
+
+**`GameSubCategory`** — подкатегория внутри игры. Например, *"Аккаунты"*, *"Пополнение"*, *"Услуги"* и т.д. У каждой свой `id`.
+
+Пример:
+
+```python
+games = await fp.account.category.get_all_categories()
+
+# Достаём первую игру
+first = games[0]
+print(first.title.name)                    # "Minecraft"
+print(first.title.id)                      # 42
+print(first.subcategories[0].sub_name)     # "Аккаунты"
+print(first.subcategories[0].id)           # 1316
+
+# Обходим всё
+for game in games:
+    print(f'\n{game.title.name}:')
+    for sub in game.subcategories:
+        print(f'  [{sub.id}] {sub.sub_name}')
+```
+
+---
+
 ## Альтернативный доступ через `fpx.services`
 
 ```python
@@ -88,4 +167,3 @@ from fpx.services import CategoryManager
 
 category_mgr = CategoryManager(fp.account)
 lots = await category_mgr.get_lot_category_last_lot(1316)
-```
