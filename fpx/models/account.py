@@ -14,6 +14,13 @@ class Balance:
     eur: float=0.0
 
 @dataclass
+class Calc:
+    type_name: str
+    price: str
+    unit: str
+    pos: str
+
+@dataclass
 class CurReview:
     text: str
     stars: int

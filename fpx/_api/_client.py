@@ -198,3 +198,14 @@ class FunPayClient:
             headers=headers
         )
         return r.json()
+
+    async def calc_category_price(self, price, node_id):
+        headers = {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        r = await self.client.request(
+            'POST', '/lots/calc',
+            data={'nodeId': node_id, 'price': price},
+            headers=headers
+        )
+        return r.json()
