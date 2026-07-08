@@ -56,14 +56,14 @@ class ChatManager:
             response = await self._account._client.send_message_request(
                 self._account.data._node_names[chat_id], -1, text
             )
-            inner_response = response.get('response', {})
         except Exception as e:
             raise fpx_err.FpxMessageDeliverError(f'Не удалось выполнить {step}. Ошибка: {e}')
-        if inner_response.get('error') is None:
+        if response.get('error') is None:
             return response
         else:
-            error_msg = inner_response.get('error', 'Неизвестная ошибка')
-            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_msg}')
+            error_code = response.get('error', '400')
+            error_msg = response.get('msg', 'Неизвестная ошибка')
+            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_code} - {error_msg}')
 
     async def get_chat_data(self, chat_id: int | str, last_message_node_id: int | str | None = None):
         '''
@@ -147,11 +147,11 @@ class ChatManager:
             response = await self._account._client.send_image_request(
                 self._account.data._node_names[chat_id], -1, image_id
             )
-            inner_response = response.get('response', {})
         except Exception as e:
             raise fpx_err.FpxMessageDeliverError(f'Не удалось выполнить {step}. Ошибка: {e}')
-        if inner_response.get('error') is None:
+        if response.get('error') is None:
             return response
         else:
-            error_msg = inner_response.get('error', 'Неизвестная ошибка')
-            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_msg}')
+            error_code = response.get('error', '400')
+            error_msg = response.get('msg', 'Неизвестная ошибка')
+            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_code} - {error_msg}')
