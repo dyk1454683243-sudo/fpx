@@ -38,10 +38,12 @@ class Router:
 
     async def invoke(self, h_func, event, state_ctx=None, args=None):
         '''Вызывает хендлер'''
+        generators_to_close = []
         async def endpoint(ev):
             sig = inspect.signature(h_func)
             kwargs = {}
             arg_index = 0
+            nonlocal generators_to_close
             for param_name, param in sig.parameters.items():
                 if param.annotation is not inspect.Parameter.empty and isinstance(ev, param.annotation):
                     kwargs[param_name] = ev
@@ -52,7 +54,15 @@ class Router:
                 if isinstance(param.default, Dependency):
                     dep_func = param.default.dependency
                     dep_sig = inspect.signature(dep_func)
-                    if len(dep_sig.parameters) == 0:
+                    if inspect.isasyncgenfunction(dep_func):
+                        gen = dep_func(ev)
+                        try:
+                            resolved_val = await anext(gen)
+                            kwargs[param_name] = resolved_val
+                            generators_to_close.append(gen)
+                        except StopAsyncIteration:
+                            pass
+                    elif len(dep_sig.parameters) == 0:
                         if asyncio.iscoroutinefunction(dep_func):
                             kwargs[param_name] = await dep_func(ev)
                         else:
@@ -75,7 +85,14 @@ class Router:
                     return await mw(ev, next_)
                 return call
             call_next = await make_next()
-        await call_next(event)
+        try:
+            await call_next(event)
+        finally:
+            for gen in generators_to_close:
+                try:
+                    await gen.aclose()
+                except Exception:
+                    pass
 
     def include_router(self, router):
         '''Метод для подключения плагинов и сторонних роутеров'''
