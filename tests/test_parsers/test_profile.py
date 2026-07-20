@@ -65,8 +65,9 @@ class TestProfileParser:
           </div>
         </a>
         """
-        result = ProfileParser.parse_my_sells(html)
-        assert len(result) == 1
+        res = ProfileParser.parse_my_sells(html)
+        assert len(res) == 1
+        result = res['sells']
         assert result[0]["order-id"] == "100"
         assert result[0]["status"] == "Оплачен"
         assert result[0]["client-name"] == "Вася"
