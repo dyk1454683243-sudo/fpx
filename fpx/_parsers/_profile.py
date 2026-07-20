@@ -121,7 +121,8 @@ class ProfileParser(BaseParser):
     @classmethod
     def parse_my_sells(cls, html_content):
         ''' Парсит https://funpay.com/orders/trade '''
-        result = []
+        result = {}
+        result['sells'] = []
         soup = BeautifulSoup(html_content, 'html.parser')
         tc_items = soup.find_all('a', class_='tc-item')
         if not tc_items:
@@ -173,12 +174,15 @@ class ProfileParser(BaseParser):
                     pre_result['category'] = "Unknown"
                     pre_result['amount'] = 1
                     pre_result['topup_data'] = None
-                result.append(pre_result)
+                result['sells'].append(pre_result)
             except Exception as e:
                 logger.debug(f'При парсинге конкретного объекта произошла ошибка: {e}')
                 continue
-        if not result:
+        if not result['sells']:
             raise fpx_err.FpxParseError('При парсинге не найдено ни одной продажи')
+        form_class = soup.find('form', class_='dyn-table-form')
+        if form_class:
+            result['next_page'] = form_class.find('input').get('value')
         return result
 
     @classmethod

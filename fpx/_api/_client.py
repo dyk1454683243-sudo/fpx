@@ -209,3 +209,14 @@ class FunPayClient:
             headers=headers
         )
         return r.json()
+
+    async def get_next_sells(self, next_page_id):
+        headers = {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        r = await self.client.request(
+            'POST', '/orders/trade',
+            data={'continue': next_page_id},
+            headers=headers
+        )
+        return r.text

@@ -14,7 +14,7 @@ class OrderRunner:
         '''
         Обновляет кеш заказов в раннере
         '''
-        orders = await self.runner._account.profile.get_my_sells()
+        orders = await self.runner._account.profile.get_my_sells(100)
         result = []
         for order in orders:
             o = {

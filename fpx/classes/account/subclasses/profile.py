@@ -1,3 +1,5 @@
+import asyncio
+
 from fpx.models.account import CurReview, Order, Profile, UserData
 from fpx.models.lots import LotInfo
 from fpx.utils import errors as fpx_err
@@ -54,16 +56,34 @@ class ProfileManager:
             FpxGetUserSellsError: Ошибка запроса продаж
         '''
         try:
+            next_stage = True
+            count_of_sells = 0
+            data = []
             stage = 'запроса данных FunPay'
             html = await self._account._client.get_my_sells()
-            stage = 'парсинга данных'
-            data = self._account._parser.parse_my_sells(html)
+            next_page_id = ''
+            while next_stage:
+                if next_page_id:
+                    html = await self._account._client.get_next_sells(next_page_id)
+                stage = 'парсинга данных'
+                new_data = self._account._parser.parse_my_sells(html)
+                next_page_id = new_data.get('next_page')
+                if not next_page_id:
+                    next_stage = False
+                    break
+                for i in new_data['sells']:
+                    data.append(i)
+                count_of_sells += len(new_data['sells'])
+                if limit != 0 and count_of_sells >= limit:
+                    next_stage = False
+                    break
+                await asyncio.sleep(3)
             counter = 0
-            result = []
         except Exception as e:
             raise fpx_err.FpxGetUserSellsError(f'При выполнении {stage} произошла ошибка: {e}')
         if limit > 0:
             counter += 1
+        result = []
         for i in data:
             if limit != 0 and counter > limit:
                 break
@@ -92,7 +112,7 @@ class ProfileManager:
         Returns:
             Profile: Объект, с данными:
                 - category_ids (list): ID категорий, в которых у юзера выставлены лоты.
-                - lots (list): Список словарей с лотами юзера юзера {lot['name']: lot['id']}.
+                - lots (list): Список объектов LotInfo с лотами юзера .
                 - reviews (list): Список объектов отзыва CurReview с данными:
                     - text (str): Текст отзыва.
                     - stars (int): Кол-во звёзд в отзыве (1-5).
