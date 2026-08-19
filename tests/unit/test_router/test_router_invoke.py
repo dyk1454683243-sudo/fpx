@@ -1,0 +1,185 @@
+"""Доп. тесты Router.invoke: Dependency Injection и цепочка middleware."""
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+from fpx.classes.runner.subclasses.router import Router
+from fpx.fsm import FSMContext
+from fpx.models.chat import Message
+from fpx.utils.dependencies import Dependency
+from fpx.utils.storage.memory import MemoryStorage
+
+
+@pytest.fixture
+def router():
+    return Router()
+
+
+def make_message(text="hi"):
+    return Message(node_msg_id=1, sender="User", chat_id="chat-1", text=text, is_system=False)
+
+
+class TestInvokeEventBinding:
+    @pytest.mark.asyncio
+    async def test_binds_event_by_annotation(self, router):
+        received = {}
+
+        async def handler(msg: Message):
+            received['msg'] = msg
+
+        message = make_message()
+        await router.invoke(handler, message)
+        assert received['msg'] is message
+
+    @pytest.mark.asyncio
+    async def test_binds_fsm_context_by_annotation(self, router):
+        received = {}
+        storage = MemoryStorage()
+        state_ctx = FSMContext(storage=storage, chat_id="chat-1")
+
+        async def handler(msg: Message, state: FSMContext):
+            received['state'] = state
+
+        await router.invoke(handler, make_message(), state_ctx)
+        assert received['state'] is state_ctx
+
+    @pytest.mark.asyncio
+    async def test_positional_args_fill_unannotated_params(self, router):
+        received = {}
+
+        async def handler(msg: Message, name, age):
+            received['name'] = name
+            received['age'] = age
+
+        await router.invoke(handler, make_message(), None, args=["Bob", "25"])
+        assert received == {'name': 'Bob', 'age': '25'}
+
+
+class TestInvokeDependencyInjection:
+    @pytest.mark.asyncio
+    async def test_sync_dependency_is_always_called_with_event(self, router):
+        """
+        Особенность реализации: dep_func всегда вызывается с event(ev),
+        независимо от того, сколько параметров он принимает по сигнатуре.
+        Поэтому функция-зависимость должна принимать 1 позиционный аргумент.
+        """
+        def get_service(ev):
+            return f"service-for-{ev.sender}"
+
+        received = {}
+
+        async def handler(msg: Message, service=Dependency(get_service)):
+            received['service'] = service
+
+        await router.invoke(handler, make_message())
+        assert received['service'] == "service-for-User"
+
+    @pytest.mark.asyncio
+    async def test_async_dependency_is_always_called_with_event(self, router):
+        async def get_service(ev):
+            return f"async-{ev.sender}"
+
+        received = {}
+
+        async def handler(msg: Message, service=Dependency(get_service)):
+            received['service'] = service
+
+        await router.invoke(handler, make_message())
+        assert received['service'] == "async-User"
+
+    @pytest.mark.asyncio
+    async def test_dependency_receiving_event(self, router):
+        def get_sender(ev):
+            return ev.sender
+
+        received = {}
+
+        async def handler(msg: Message, sender=Dependency(get_sender)):
+            received['sender'] = sender
+
+        await router.invoke(handler, make_message())
+        assert received['sender'] == "User"
+
+    @pytest.mark.asyncio
+    async def test_async_gen_dependency_is_closed_after_call(self, router):
+        closed = {'value': False}
+
+        async def get_resource(ev):
+            try:
+                yield "resource"
+            finally:
+                closed['value'] = True
+
+        received = {}
+
+        async def handler(msg: Message, res=Dependency(get_resource)):
+            received['res'] = res
+
+        await router.invoke(handler, make_message())
+        assert received['res'] == "resource"
+        assert closed['value'] is True
+
+
+class TestMiddlewareChain:
+    @pytest.mark.asyncio
+    async def test_middleware_wraps_handler_call(self, router):
+        call_order = []
+
+        @router.middleware()
+        async def logging_mw(event, call_next):
+            call_order.append("before")
+            result = await call_next(event)
+            call_order.append("after")
+            return result
+
+        async def handler(msg: Message):
+            call_order.append("handler")
+
+        await router.invoke(handler, make_message())
+        assert call_order == ["before", "handler", "after"]
+
+    @pytest.mark.asyncio
+    async def test_multiple_middlewares_run_in_registration_order(self, router):
+        call_order = []
+
+        @router.middleware()
+        async def mw1(event, call_next):
+            call_order.append("mw1-before")
+            await call_next(event)
+            call_order.append("mw1-after")
+
+        @router.middleware()
+        async def mw2(event, call_next):
+            call_order.append("mw2-before")
+            await call_next(event)
+            call_order.append("mw2-after")
+
+        async def handler(msg: Message):
+            call_order.append("handler")
+
+        await router.invoke(handler, make_message())
+        assert call_order == [
+            "mw1-before", "mw2-before", "handler", "mw2-after", "mw1-after"
+        ]
+
+    @pytest.mark.asyncio
+    async def test_middleware_can_short_circuit(self, router):
+        called = {'handler': False}
+
+        @router.middleware()
+        async def blocking_mw(event, call_next):
+            return None  # не вызываем call_next
+
+        async def handler(msg: Message):
+            called['handler'] = True
+
+        await router.invoke(handler, make_message())
+        assert called['handler'] is False
+
+
+class TestIncludeRouterUnknownEventTypeIgnored:
+    def test_unknown_event_types_are_skipped(self, router):
+        sub = Router()
+        sub._handlers['unknown_type'] = ['whatever']
+        router.include_router(sub)
+        assert 'unknown_type' not in router._handlers
