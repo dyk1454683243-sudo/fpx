@@ -228,13 +228,18 @@ class TestTriggerMessageHandlers:
     @pytest.mark.asyncio
     async def test_dispatches_matching_message_handler(self, chat_runner, runner):
         handler = AsyncMock()
+    
+        async def fake_handler(message: Message, **kwargs):
+            await handler(message, **kwargs)
+
         runner.router._handlers['message'] = [{
             'state': None, 'filter_text': None, 'mapping': None, 'contains': None,
             'regex': None, 'ignore_chat_id': None, 'ignore_sender': None, 'custom': None,
-            'function': handler,
+            'function': fake_handler,
         }]
         msg = make_message(sender="User", text="hi")
         await chat_runner._trigger_message_handlers(msg)
+        
         handler.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -251,24 +256,28 @@ class TestTriggerMessageHandlers:
 
     @pytest.mark.asyncio
     async def test_mapping_sends_automated_reply_and_still_invokes_handler(self, chat_runner, runner):
-        """
-        Согласно исходному коду: сматченный mapping отправляет авто-ответ,
-        но затем хендлер всё равно вызывается (mapping не прерывает вызов function).
-        """
         msg = make_message(sender="User", text="привет всем")
         msg._client = MagicMock()
         msg._client._account.chat.send_message = AsyncMock()
+        
         handler_func = AsyncMock()
+        
+
+        async def fake_handler(message: Message, **kwargs):
+            await handler_func(message, **kwargs)
+            
         runner.router._handlers['message'] = [{
             'state': None, 'filter_text': None,
             'mapping': {'привет': 'Здравствуйте, {sender}!'},
             'contains': None, 'regex': None, 'ignore_chat_id': None,
-            'ignore_sender': None, 'custom': None, 'function': handler_func,
+            'ignore_sender': None, 'custom': None, 
+            'function': fake_handler, 
         }]
         await chat_runner._trigger_message_handlers(msg)
+    
         msg._client._account.chat.send_message.assert_awaited_once()
-        handler_func.assert_called_once()
-
+        handler_func.assert_awaited_once()
+        
     @pytest.mark.asyncio
     async def test_mapping_no_trigger_match_skips_handler(self, chat_runner, runner):
         msg = make_message(sender="User", text="случайный текст")
