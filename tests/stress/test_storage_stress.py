@@ -6,6 +6,7 @@
 Эти тесты медленнее unit-тестов и не входят в дефолтный `pytest` без явного
 указания директории tests/stress (см. tests/pytest.ini и tests/run_tests.py).
 """
+
 import asyncio
 import time
 

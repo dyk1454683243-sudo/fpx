@@ -1,4 +1,5 @@
 """Тесты FileStorage — персистентное хранилище FSM на файловой системе."""
+
 import json
 
 import pytest

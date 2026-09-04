@@ -1,4 +1,5 @@
 """Тесты FunPayEditor — изменение полей лота, удаление, toggle on/off."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -10,8 +11,7 @@ from fpx.utils import errors as fpx_err
 
 def make_lot_editor(fields=None):
     return LotEditor(
-        csrf_token="tok", form_created_at="ts", offer_id="1",
-        node_id="2", location="", deleted="", fields=fields or {}
+        csrf_token="tok", form_created_at="ts", offer_id="1", node_id="2", location="", deleted="", fields=fields or {}
     )
 
 
@@ -117,9 +117,7 @@ class TestChangeLotAmount:
 class TestChangePaymentMsg:
     @pytest.mark.asyncio
     async def test_success(self, editor, account):
-        account.lot._get_lot_editor_details.return_value = make_lot_editor(
-            {"fields[payment_msg][ru]": "Спасибо"}
-        )
+        account.lot._get_lot_editor_details.return_value = make_lot_editor({"fields[payment_msg][ru]": "Спасибо"})
         account._client.edit_lot.return_value = response(200)
         result = await editor.change_payment_msg("1", "Спасибо", "Thanks")
         assert result is True

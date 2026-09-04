@@ -1,4 +1,5 @@
 """Тесты моделей аккаунта."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -15,10 +16,7 @@ class TestAccountModels:
         assert bal.eur == 0.8
 
     def test_order_model(self):
-        order = Order(
-            order_id="999", client_name="Вася", price=50.0,
-            status="paid", name="Товар", chat_id="chat-1"
-        )
+        order = Order(order_id="999", client_name="Вася", price=50.0, status="paid", name="Товар", chat_id="chat-1")
         assert order.order_id == "999"
         assert order.price == 50.0
 
@@ -48,10 +46,7 @@ class TestAccountModels:
 
     @pytest.mark.asyncio
     async def test_order_answer_with_mock_client(self):
-        order = Order(
-            order_id="10", order_time="12:00", client_name="Иван",
-            name="Товар", chat_id="chat-10"
-        )
+        order = Order(order_id="10", order_time="12:00", client_name="Иван", name="Товар", chat_id="chat-10")
         mock_client = MagicMock()
         mock_client._account.chat.send_message = AsyncMock(return_value=True)
         order._client = mock_client

@@ -3,6 +3,7 @@
 отзывов и изменений в категориях (имитация "утреннего наплыва" заказов
 у крупного продавца).
 """
+
 import time
 from unittest.mock import AsyncMock, MagicMock
 
@@ -49,6 +50,7 @@ class TestOrderRunnerStress:
 
         start = time.monotonic()
         import asyncio
+
         await asyncio.gather(*(order_runner._process_single_order(o) for o in orders))
         elapsed = time.monotonic() - start
 
@@ -76,6 +78,7 @@ class TestOrderRunnerStress:
         orders = [Order(order_id=str(i), status="Оплачен") for i in range(100)]
 
         import asyncio
+
         await asyncio.gather(*(order_runner._process_single_order(o) for o in orders))
 
         assert len(processed) == 90  # каждый 10-й упал
@@ -95,12 +98,10 @@ class TestReviewRunnerStress:
             processed.append(review.order_id)
 
         runner._account.order.get_order_details = AsyncMock(return_value=MagicMock())
-        reviews = [
-            CurReview(text="ok", stars=5, author=f"user{i}", order_id=str(i))
-            for i in range(N_REVIEWS)
-        ]
+        reviews = [CurReview(text="ok", stars=5, author=f"user{i}", order_id=str(i)) for i in range(N_REVIEWS)]
 
         import asyncio
+
         start = time.monotonic()
         await asyncio.gather(*(review_runner._target_review_processing(r) for r in reviews))
         elapsed = time.monotonic() - start
@@ -117,10 +118,11 @@ class TestCategoryRunnerStress:
         category_runner = CategoryRunner(runner)
 
         async def get_last_lot(cat_id):
-            return [CategoryLastLot(
-                category_id=cat_id, filtration="все", price=100.0,
-                offer_id=f"offer-{cat_id}", owner_username="Bob"
-            )]
+            return [
+                CategoryLastLot(
+                    category_id=cat_id, filtration="все", price=100.0, offer_id=f"offer-{cat_id}", owner_username="Bob"
+                )
+            ]
 
         runner._account.category.get_lot_category_last_lot = AsyncMock(side_effect=get_last_lot)
         category_ids = [str(i) for i in range(N_CATEGORIES)]
@@ -129,5 +131,5 @@ class TestCategoryRunnerStress:
         await category_runner._update_lot_category_cache(category_ids)
         elapsed = time.monotonic() - start
 
-        assert len(runner._cache['lot_categories']) == N_CATEGORIES
+        assert len(runner._cache["lot_categories"]) == N_CATEGORIES
         assert elapsed < 15, f"Обновление {N_CATEGORIES} категорий заняло подозрительно долго: {elapsed:.2f}s"

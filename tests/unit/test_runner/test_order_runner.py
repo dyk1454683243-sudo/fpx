@@ -1,4 +1,5 @@
 """Тесты OrderRunner — кеш заказов, диспетчинг по статусам, триггерные команды."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -10,8 +11,12 @@ from fpx.models.account import Order
 
 def make_order(**overrides):
     defaults = dict(
-        order_id="1", order_time="10:00", client_name="Bob",
-        price=100.0, name="Товар", status="Оплачен",
+        order_id="1",
+        order_time="10:00",
+        client_name="Bob",
+        price=100.0,
+        name="Товар",
+        status="Оплачен",
     )
     defaults.update(overrides)
     return MagicMock(**defaults)
@@ -20,7 +25,7 @@ def make_order(**overrides):
 @pytest.fixture
 def runner():
     r = MagicMock()
-    r._cache = {'orders': [], 'old_orders': []}
+    r._cache = {"orders": [], "old_orders": []}
     r.router = Router()
     r.storage = MagicMock()
     r._handle_error = AsyncMock()
@@ -37,25 +42,37 @@ class TestUpdateOrderCache:
     async def test_moves_old_cache_and_builds_new(self, order_runner, runner):
         order = make_order()
         runner._account.profile.get_my_sells = AsyncMock(return_value=[order])
-        runner._cache['orders'] = [{'existing': True}]
+        runner._cache["orders"] = [{"existing": True}]
         await order_runner._update_order_cache()
-        assert runner._cache['old_orders'] == [{'existing': True}]
-        assert runner._cache['orders'][0]['order_id'] == "1"
+        assert runner._cache["old_orders"] == [{"existing": True}]
+        assert runner._cache["orders"][0]["order_id"] == "1"
         runner._account.profile.get_my_sells.assert_awaited_once_with(100)
 
 
 class TestCompareOrderCache:
     def test_no_change_returns_empty(self, order_runner, runner):
-        order_dict = {'order_id': '1', 'order_time': None, 'client_name': None,
-                       'price': None, 'name': None, 'status': None}
-        runner._cache['orders'] = runner._cache['old_orders'] = [order_dict]
+        order_dict = {
+            "order_id": "1",
+            "order_time": None,
+            "client_name": None,
+            "price": None,
+            "name": None,
+            "status": None,
+        }
+        runner._cache["orders"] = runner._cache["old_orders"] = [order_dict]
         assert order_runner._compare_order_cache() == []
 
     def test_new_order_detected(self, order_runner, runner):
-        order_dict = {'order_id': '1', 'order_time': None, 'client_name': None,
-                       'price': None, 'name': None, 'status': None}
-        runner._cache['old_orders'] = []
-        runner._cache['orders'] = [order_dict]
+        order_dict = {
+            "order_id": "1",
+            "order_time": None,
+            "client_name": None,
+            "price": None,
+            "name": None,
+            "status": None,
+        }
+        runner._cache["old_orders"] = []
+        runner._cache["orders"] = [order_dict]
         result = order_runner._compare_order_cache()
         assert len(result) == 1
         assert isinstance(result[0], Order)
@@ -69,7 +86,8 @@ class TestCheckHandler:
 
         async def func(order: Order):
             called.append(order)
-        handler = {'function': func, 'mapping': None}
+
+        handler = {"function": func, "mapping": None}
         order = Order(order_id="1", description="описание")
         result = await order_runner._check_handler(handler, order, None)
         assert result is True
@@ -81,7 +99,8 @@ class TestCheckHandler:
 
         async def func(order: Order):
             called.append(order)
-        handler = {'function': func, 'mapping': ['VIP']}
+
+        handler = {"function": func, "mapping": ["VIP"]}
         order = Order(order_id="1", description="Заказ VIP статус")
         result = await order_runner._check_handler(handler, order, None)
         assert result is True
@@ -91,7 +110,8 @@ class TestCheckHandler:
     async def test_mapping_no_match_returns_false(self, order_runner, runner):
         async def func(order: Order):
             pass
-        handler = {'function': func, 'mapping': ['VIP']}
+
+        handler = {"function": func, "mapping": ["VIP"]}
         order = Order(order_id="1", description="Обычный заказ")
         result = await order_runner._check_handler(handler, order, None)
         assert result is False
@@ -109,7 +129,8 @@ class TestCheckTriggerForCommand:
 
         async def func(order: Order):
             called.append(order)
-        runner.router._handlers['order_command'] = [{'trigger_command': {'моя метка': func}}]
+
+        runner.router._handlers["order_command"] = [{"trigger_command": {"моя метка": func}}]
         order = Order(order_id="1", description="описание с моя метка внутри")
         result = await order_runner._check_trigger_for_command(order, None)
         assert result is True
@@ -120,7 +141,8 @@ class TestCheckTriggerForCommand:
     async def test_no_matching_command_returns_false(self, order_runner, runner):
         async def func(order: Order):
             pass
-        runner.router._handlers['order_command'] = [{'trigger_command': {'другая метка': func}}]
+
+        runner.router._handlers["order_command"] = [{"trigger_command": {"другая метка": func}}]
         order = Order(order_id="1", description="описание")
         assert await order_runner._check_trigger_for_command(order, None) is False
 

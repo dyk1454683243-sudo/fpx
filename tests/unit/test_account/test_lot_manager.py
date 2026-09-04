@@ -1,4 +1,5 @@
 """Тесты LotManager — данные лотов, автовыдача, поднятие, создание."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -37,9 +38,14 @@ class TestGetLotEditorDetails:
     async def test_success_splits_base_and_other_fields(self, manager, account):
         account._client.get_lot_editor_data.return_value = "<html></html>"
         account._parser.parse_edit_lot_page.return_value = {
-            "csrf_token": "tok", "form_created_at": "ts", "offer_id": "1",
-            "node_id": "2", "location": "", "deleted": "",
-            "price": "100", "amount": "5"
+            "csrf_token": "tok",
+            "form_created_at": "ts",
+            "offer_id": "1",
+            "node_id": "2",
+            "location": "",
+            "deleted": "",
+            "price": "100",
+            "amount": "5",
         }
         result = await manager._get_lot_editor_details("1")
         assert isinstance(result, LotEditor)
@@ -58,8 +64,13 @@ class TestGetLotSecrets:
     async def test_success(self, manager, account):
         account._client.get_lot_editor_data.return_value = "<html></html>"
         account._parser.parse_edit_lot_page.return_value = {
-            "csrf_token": "t", "form_created_at": "ts", "offer_id": "1",
-            "node_id": "2", "location": "", "deleted": "", "secrets": "a\nb"
+            "csrf_token": "t",
+            "form_created_at": "ts",
+            "offer_id": "1",
+            "node_id": "2",
+            "location": "",
+            "deleted": "",
+            "secrets": "a\nb",
         }
         result = await manager.get_lot_secrets("1")
         assert result == ["a", "b"]
@@ -76,7 +87,9 @@ class TestGetLotInfo:
     async def test_success(self, manager, account):
         account._client.get_lot_info.return_value = "<html></html>"
         account._parser.parse_current_lot_menu.return_value = {
-            "short_desc": "Short", "description": "Long", "price": "100.5"
+            "short_desc": "Short",
+            "description": "Long",
+            "price": "100.5",
         }
         result = await manager.get_lot_info("1")
         assert isinstance(result, CurrentLotInfo)
@@ -126,8 +139,12 @@ class TestGetNodeEditorData:
     async def test_success_builds_lot_creation_fields(self, manager, account):
         account._client.get_node_editor_data.return_value = "<html></html>"
         account._parser.parse_create_lot_page.return_value = {
-            "csrf_token": "tok", "form_created_at": "ts", "offer_id": "1",
-            "node_id": "2", "location": "", "deleted": "",
+            "csrf_token": "tok",
+            "form_created_at": "ts",
+            "offer_id": "1",
+            "node_id": "2",
+            "location": "",
+            "deleted": "",
             "fields[type]": [{"Аренда": "1"}, {"Продажа": "2"}],
             "price": [],
         }

@@ -4,6 +4,7 @@
 `fpx-engine[redis]`), поэтому тесты подменяют `redis.asyncio.Redis` фейковым
 асинхронным клиентом на основе словаря, чтобы не требовать реального сервера Redis.
 """
+
 import json
 import sys
 import types
@@ -50,12 +51,14 @@ def fake_redis_module(monkeypatch):
 @pytest.fixture
 def redis_storage(fake_redis_module):
     from fpx.utils.storage.redis import RedisStorage
+
     return RedisStorage(url="redis://fake:6379", prefix="test")
 
 
 class TestRedisStorageImportGuard:
     def test_missing_redis_package_raises_import_error(self, monkeypatch):
         import fpx.utils.storage.redis as redis_module
+
         monkeypatch.setitem(sys.modules, "redis", None)
         monkeypatch.setitem(sys.modules, "redis.asyncio", None)
         with pytest.raises(ImportError):

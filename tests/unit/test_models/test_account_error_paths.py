@@ -1,4 +1,5 @@
 """Доп. тесты моделей аккаунта: обработка ошибок Order/CurReview без клиента/заказа."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

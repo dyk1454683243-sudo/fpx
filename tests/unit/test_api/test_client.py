@@ -1,4 +1,5 @@
 """Тесты FunPayClient — тонкая обёртка над RequestEngine/httpx клиентом."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -187,9 +188,7 @@ class TestOrderAndReviewEndpoints:
         assert result is response
         args, kwargs = account._request_engine.execute.call_args
         assert args == ("POST", "/orders/review")
-        assert kwargs["data"] == {
-            "authorId": "author-1", "text": "спасибо", "rating": "", "orderId": "order-1"
-        }
+        assert kwargs["data"] == {"authorId": "author-1", "text": "спасибо", "rating": "", "orderId": "order-1"}
 
 
 class TestEditAndCreateLot:

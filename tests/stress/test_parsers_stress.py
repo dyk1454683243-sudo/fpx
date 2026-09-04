@@ -3,6 +3,7 @@
 и за разумное время справляется с большими HTML-страницами (много чатов
 и много категорий на странице), как это бывает у активных продавцов на FunPay.
 """
+
 import time
 
 import pytest
@@ -32,10 +33,7 @@ def build_large_chats_html(n):
 def build_large_categories_html(n_games, subcats_per_game=3):
     blocks = []
     for i in range(n_games):
-        subcats = "".join(
-            f'<li><a href="/lots/{i}{j}/">Подкатегория {i}-{j}</a></li>'
-            for j in range(subcats_per_game)
-        )
+        subcats = "".join(f'<li><a href="/lots/{i}{j}/">Подкатегория {i}-{j}</a></li>' for j in range(subcats_per_game))
         blocks.append(f"""
         <div class="promo-game-item">
           <div class="game-title" data-id="{i}">Игра {i}</div>

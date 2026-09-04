@@ -1,4 +1,5 @@
 """Тесты LotParser — данные лотов, редактор, поднятие."""
+
 import pytest
 
 from fpx._parsers._lots import LotParser

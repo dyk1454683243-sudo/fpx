@@ -1,5 +1,4 @@
 """Тесты FunPayTools — точка входа в библиотеку, инициализация клиента/раннера."""
-from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
@@ -11,6 +10,7 @@ from fpx.utils.storage.memory import MemoryStorage
 
 TEST_GKEY = "0123456789abcdef0123456789abcdef"
 TEST_GSEAL = "v1.0000000000000000000000000000000000000000000000000000000000000000.00000000000000000000000000000000.1600000000.k1.0000000000000000000000000000000000000000000000000000000000000000"
+
 
 class TestInit:
     def test_default_http_client_is_created_with_cookies(self):

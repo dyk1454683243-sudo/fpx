@@ -1,4 +1,5 @@
 """Тесты ChatManager — чаты, отправка сообщений и изображений."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -85,7 +86,10 @@ class TestGetChatData:
     async def test_no_messages_returns_empty_list(self, manager, account):
         account._client.get_current_chat.return_value = "<html></html>"
         account._parser.parse_chat.return_value = {
-            "messages": [], "data-name": "users-1-2", "csrf-token": "tok", "user-id": "1",
+            "messages": [],
+            "data-name": "users-1-2",
+            "csrf-token": "tok",
+            "user-id": "1",
         }
         result = await manager.get_chat_data("chat-1")
         assert result.last_messages == []
@@ -102,7 +106,10 @@ class TestSendMessage:
     async def test_success_fetches_chat_data_first_time(self, manager, account):
         account._client.get_current_chat.return_value = "<html></html>"
         account._parser.parse_chat.return_value = {
-            "messages": [], "data-name": "users-1-2", "csrf-token": "tok", "user-id": "1",
+            "messages": [],
+            "data-name": "users-1-2",
+            "csrf-token": "tok",
+            "user-id": "1",
         }
         account._client.send_message_request.return_value = {"error": None}
         result = await manager.send_message("chat-1", "hello")

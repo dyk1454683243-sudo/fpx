@@ -1,5 +1,6 @@
 """Тесты Account — сборка всех менеджеров и загрузка изображений."""
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
