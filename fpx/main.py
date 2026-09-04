@@ -1,12 +1,30 @@
 import httpx
+import re
 
 from fpx.classes.account.account import Account
 from fpx.classes.runner.runner import Runner
 from fpx.fsm import BaseStorage, MemoryStorage
+from fpx.utils.errors import FpxInvalideCookies
 
+
+GKEY_PATTERN = re.compile(r"^[a-z0-9]{32}$")
+GSEAL_PATTERN = re.compile(r"^v1\.[a-f0-9]{64}\.[a-f0-9]{32}\.\d+\.k\d+\.[a-f0-9]{64}$")
 
 class FunPayTools:
-    def __init__(self, gkey, gseal, storage: BaseStorage | None = None, proxy = None, http_client = None):
+    def __init__(
+            self, 
+            gkey: str,
+            gseal: str, 
+            storage: BaseStorage | None = None, 
+            proxy = None, 
+            http_client = None
+        ):
+        if not gkey or not gseal:
+            raise FpxInvalideCookies("gkey и gseal не могут быть None.")
+        if not GKEY_PATTERN.match(gkey):
+            raise FpxInvalideCookies("Неверный формат gkey, перепроверь его.")
+        if not GSEAL_PATTERN.match(gseal):
+            raise FpxInvalideCookies('Неверный формат gseal, перепроверь его.')
         self._cookies = {
             'golden_key': gkey,
             'golden_seal': gseal,
