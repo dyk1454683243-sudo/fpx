@@ -1,4 +1,5 @@
 """Тесты OrderManager — детали заказа, поиск по имени, возврат."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -28,8 +29,10 @@ class TestGetOrderDetails:
     async def test_success(self, manager, account):
         account._client.get_order_info.return_value = "<html></html>"
         account._parser.parse_order_page.return_value = {
-            "status": "Оплачен", "review": {"text": "", "stars": 0, "answer": ""},
-            "desc": "Описание", "chat_id": "chat-1"
+            "status": "Оплачен",
+            "review": {"text": "", "stars": 0, "answer": ""},
+            "desc": "Описание",
+            "chat_id": "chat-1",
         }
         result = await manager.get_order_details("order-1")
         assert isinstance(result, Order)
@@ -45,8 +48,12 @@ class TestGetOrderDetails:
 
 def make_order(**overrides):
     defaults = dict(
-        order_id="1", client_name="Bob", name="Товар А",
-        chat_id=None, description=None, review=None,
+        order_id="1",
+        client_name="Bob",
+        name="Товар А",
+        chat_id=None,
+        description=None,
+        review=None,
     )
     defaults.update(overrides)
     return Order(**defaults)
@@ -55,37 +62,30 @@ def make_order(**overrides):
 class TestFindOrdersByBuyerName:
     @pytest.mark.asyncio
     async def test_filters_by_buyer_name(self, manager, account):
-        account.profile.get_my_sells.return_value = [
-            make_order(client_name="Bob"), make_order(client_name="Alice")
-        ]
+        account.profile.get_my_sells.return_value = [make_order(client_name="Bob"), make_order(client_name="Alice")]
         result = await manager.find_orders_by_buyer_name(buyer_name="Bob", full_info=False)
         assert len(result) == 1
         assert result[0].client_name == "Bob"
 
     @pytest.mark.asyncio
     async def test_filters_by_order_name_partial(self, manager, account):
-        account.profile.get_my_sells.return_value = [
-            make_order(name="Золото WoW"), make_order(name="Ключ Steam")
-        ]
+        account.profile.get_my_sells.return_value = [make_order(name="Золото WoW"), make_order(name="Ключ Steam")]
         result = await manager.find_orders_by_buyer_name(order_name="wow", full_info=False)
         assert len(result) == 1
         assert result[0].name == "Золото WoW"
 
     @pytest.mark.asyncio
     async def test_filters_by_order_name_exact(self, manager, account):
-        account.profile.get_my_sells.return_value = [
-            make_order(name="Ключ"), make_order(name="Ключ Steam")
-        ]
-        result = await manager.find_orders_by_buyer_name(
-            order_name="ключ", search_mode="exact", full_info=False
-        )
+        account.profile.get_my_sells.return_value = [make_order(name="Ключ"), make_order(name="Ключ Steam")]
+        result = await manager.find_orders_by_buyer_name(order_name="ключ", search_mode="exact", full_info=False)
         assert len(result) == 1
         assert result[0].name == "Ключ"
 
     @pytest.mark.asyncio
     async def test_filters_by_order_name_keywords(self, manager, account):
         account.profile.get_my_sells.return_value = [
-            make_order(name="Золото и ключ WoW"), make_order(name="Ключ Steam")
+            make_order(name="Золото и ключ WoW"),
+            make_order(name="Ключ Steam"),
         ]
         result = await manager.find_orders_by_buyer_name(
             order_name="золото ключ", search_mode="keywords", full_info=False

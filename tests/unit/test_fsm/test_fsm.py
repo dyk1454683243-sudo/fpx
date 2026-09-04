@@ -1,4 +1,5 @@
 """Тесты FSM (Finite State Machine)."""
+
 import pytest
 
 from fpx.fsm import FSMContext, MemoryStorage

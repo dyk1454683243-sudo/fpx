@@ -1,4 +1,5 @@
 """Интеграционный тест «счастливый путь»."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -29,9 +30,7 @@ class TestHappyPath:
         assert await ctx.get_state() == "dialog"
 
         msg = Message(
-            node_msg_id=chat.node_msg_id,
-            sender=chat.username, chat_id=chat.id,
-            text=chat.last_msg, is_system=False
+            node_msg_id=chat.node_msg_id, sender=chat.username, chat_id=chat.id, text=chat.last_msg, is_system=False
         )
         mock_client = MagicMock()
         mock_client._account.chat.send_message = AsyncMock(return_value=True)

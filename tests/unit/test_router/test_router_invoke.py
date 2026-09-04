@@ -1,5 +1,4 @@
 """Доп. тесты Router.invoke: Dependency Injection и цепочка middleware."""
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -25,11 +24,11 @@ class TestInvokeEventBinding:
         received = {}
 
         async def handler(msg: Message):
-            received['msg'] = msg
+            received["msg"] = msg
 
         message = make_message()
         await router.invoke(handler, message)
-        assert received['msg'] is message
+        assert received["msg"] is message
 
     @pytest.mark.asyncio
     async def test_binds_fsm_context_by_annotation(self, router):
@@ -38,21 +37,21 @@ class TestInvokeEventBinding:
         state_ctx = FSMContext(storage=storage, chat_id="chat-1")
 
         async def handler(msg: Message, state: FSMContext):
-            received['state'] = state
+            received["state"] = state
 
         await router.invoke(handler, make_message(), state_ctx)
-        assert received['state'] is state_ctx
+        assert received["state"] is state_ctx
 
     @pytest.mark.asyncio
     async def test_positional_args_fill_unannotated_params(self, router):
         received = {}
 
         async def handler(msg: Message, name, age):
-            received['name'] = name
-            received['age'] = age
+            received["name"] = name
+            received["age"] = age
 
         await router.invoke(handler, make_message(), None, args=["Bob", "25"])
-        assert received == {'name': 'Bob', 'age': '25'}
+        assert received == {"name": "Bob", "age": "25"}
 
 
 class TestInvokeDependencyInjection:
@@ -63,16 +62,17 @@ class TestInvokeDependencyInjection:
         независимо от того, сколько параметров он принимает по сигнатуре.
         Поэтому функция-зависимость должна принимать 1 позиционный аргумент.
         """
+
         def get_service(ev):
             return f"service-for-{ev.sender}"
 
         received = {}
 
         async def handler(msg: Message, service=Dependency(get_service)):
-            received['service'] = service
+            received["service"] = service
 
         await router.invoke(handler, make_message())
-        assert received['service'] == "service-for-User"
+        assert received["service"] == "service-for-User"
 
     @pytest.mark.asyncio
     async def test_async_dependency_is_always_called_with_event(self, router):
@@ -82,10 +82,10 @@ class TestInvokeDependencyInjection:
         received = {}
 
         async def handler(msg: Message, service=Dependency(get_service)):
-            received['service'] = service
+            received["service"] = service
 
         await router.invoke(handler, make_message())
-        assert received['service'] == "async-User"
+        assert received["service"] == "async-User"
 
     @pytest.mark.asyncio
     async def test_dependency_receiving_event(self, router):
@@ -95,29 +95,29 @@ class TestInvokeDependencyInjection:
         received = {}
 
         async def handler(msg: Message, sender=Dependency(get_sender)):
-            received['sender'] = sender
+            received["sender"] = sender
 
         await router.invoke(handler, make_message())
-        assert received['sender'] == "User"
+        assert received["sender"] == "User"
 
     @pytest.mark.asyncio
     async def test_async_gen_dependency_is_closed_after_call(self, router):
-        closed = {'value': False}
+        closed = {"value": False}
 
         async def get_resource(ev):
             try:
                 yield "resource"
             finally:
-                closed['value'] = True
+                closed["value"] = True
 
         received = {}
 
         async def handler(msg: Message, res=Dependency(get_resource)):
-            received['res'] = res
+            received["res"] = res
 
         await router.invoke(handler, make_message())
-        assert received['res'] == "resource"
-        assert closed['value'] is True
+        assert received["res"] == "resource"
+        assert closed["value"] is True
 
 
 class TestMiddlewareChain:
@@ -158,28 +158,26 @@ class TestMiddlewareChain:
             call_order.append("handler")
 
         await router.invoke(handler, make_message())
-        assert call_order == [
-            "mw1-before", "mw2-before", "handler", "mw2-after", "mw1-after"
-        ]
+        assert call_order == ["mw1-before", "mw2-before", "handler", "mw2-after", "mw1-after"]
 
     @pytest.mark.asyncio
     async def test_middleware_can_short_circuit(self, router):
-        called = {'handler': False}
+        called = {"handler": False}
 
         @router.middleware()
         async def blocking_mw(event, call_next):
             return None  # не вызываем call_next
 
         async def handler(msg: Message):
-            called['handler'] = True
+            called["handler"] = True
 
         await router.invoke(handler, make_message())
-        assert called['handler'] is False
+        assert called["handler"] is False
 
 
 class TestIncludeRouterUnknownEventTypeIgnored:
     def test_unknown_event_types_are_skipped(self, router):
         sub = Router()
-        sub._handlers['unknown_type'] = ['whatever']
+        sub._handlers["unknown_type"] = ["whatever"]
         router.include_router(sub)
-        assert 'unknown_type' not in router._handlers
+        assert "unknown_type" not in router._handlers

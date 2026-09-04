@@ -1,4 +1,5 @@
 """Общая конфигурация pytest для тестов fpx."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

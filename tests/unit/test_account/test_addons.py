@@ -1,4 +1,5 @@
 """Тесты AddonsManager — game_id и калькулятор цены с комиссией."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

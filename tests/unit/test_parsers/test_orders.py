@@ -1,4 +1,5 @@
 """Тесты OrderParser — страница заказа и категория."""
+
 import pytest
 
 from fpx._parsers._orders import OrderParser

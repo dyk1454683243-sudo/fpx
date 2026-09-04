@@ -16,6 +16,7 @@
 Требования:
     pip install pytest pytest-asyncio pytest-cov beautifulsoup4 httpx fpx-engine
 """
+
 import subprocess
 import sys
 

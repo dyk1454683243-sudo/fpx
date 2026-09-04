@@ -1,4 +1,5 @@
 """Тесты CategoryManager — категории лотов/чипсов и поиск по фп."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

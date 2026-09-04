@@ -1,4 +1,5 @@
 """Тесты моделей чатов."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -10,8 +11,13 @@ from fpx.utils import errors as fpx_err
 class TestChatModels:
     def test_chat_model(self):
         chat = Chat(
-            id="123", node_msg_id=1, username="User",
-            last_msg="Hi", date="10:00", link="/chat/?node=123", is_unread=True
+            id="123",
+            node_msg_id=1,
+            username="User",
+            last_msg="Hi",
+            date="10:00",
+            link="/chat/?node=123",
+            is_unread=True,
         )
         assert chat.id == "123"
         assert chat.is_unread is True
@@ -24,6 +30,7 @@ class TestChatModels:
         msg = Message(node_msg_id=123456, sender="User", chat_id="123", text="Hello", is_system=False)
         with pytest.raises(fpx_err.FpxClientNotAttachedError):
             import asyncio
+
             asyncio.run(msg.answer("Привет"))
 
     @pytest.mark.asyncio

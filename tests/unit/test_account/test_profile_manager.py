@@ -1,4 +1,5 @@
 """Тесты ProfileManager — данные юзера, продажи, профиль, баланс."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -35,9 +36,7 @@ class TestGetUserData:
     @pytest.mark.asyncio
     async def test_success_updates_cache(self, manager, account):
         account._client.get_main_menu.return_value = "<html></html>"
-        account._parser.parse_main_menu.return_value = {
-            "username": "Bob", "user-id": "1", "csrf-token": "tok"
-        }
+        account._parser.parse_main_menu.return_value = {"username": "Bob", "user-id": "1", "csrf-token": "tok"}
         result = await manager.get_user_data()
         assert isinstance(result, UserData)
         assert account.data.username == "Bob"
@@ -63,8 +62,17 @@ class TestGetMySells:
         account._client.get_my_sells.return_value = "<html></html>"
         account._parser.parse_my_sells.return_value = {
             "sells": [
-                {"order-id": "1", "order-time": "10:00", "client-name": "Bob", "price": 10.0,
-                 "status": "Оплачен", "name": "Товар", "category": "Cat", "amount": 1, "topup_data": None}
+                {
+                    "order-id": "1",
+                    "order-time": "10:00",
+                    "client-name": "Bob",
+                    "price": 10.0,
+                    "status": "Оплачен",
+                    "name": "Товар",
+                    "category": "Cat",
+                    "amount": 1,
+                    "topup_data": None,
+                }
             ]
         }
         result = await manager.get_my_sells()
@@ -80,15 +88,33 @@ class TestGetMySells:
         account._client.get_my_sells.return_value = "<html></html>"
         page1 = {
             "sells": [
-                {"order-id": "1", "order-time": "t", "client-name": "Bob", "price": 1.0,
-                 "status": "s", "name": "A", "category": "c", "amount": 1, "topup_data": None}
+                {
+                    "order-id": "1",
+                    "order-time": "t",
+                    "client-name": "Bob",
+                    "price": 1.0,
+                    "status": "s",
+                    "name": "A",
+                    "category": "c",
+                    "amount": 1,
+                    "topup_data": None,
+                }
             ],
             "next_page": "page-2",
         }
         page2 = {
             "sells": [
-                {"order-id": "2", "order-time": "t", "client-name": "Bob", "price": 2.0,
-                 "status": "s", "name": "B", "category": "c", "amount": 1, "topup_data": None}
+                {
+                    "order-id": "2",
+                    "order-time": "t",
+                    "client-name": "Bob",
+                    "price": 2.0,
+                    "status": "s",
+                    "name": "B",
+                    "category": "c",
+                    "amount": 1,
+                    "topup_data": None,
+                }
             ]
         }
         account._parser.parse_my_sells.side_effect = [page1, page2]
@@ -102,8 +128,17 @@ class TestGetMySells:
         monkeypatch.setattr("asyncio.sleep", AsyncMock())
         account._client.get_my_sells.return_value = "<html></html>"
         sells = [
-            {"order-id": str(i), "order-time": "t", "client-name": "Bob", "price": 1.0,
-             "status": "s", "name": "A", "category": "c", "amount": 1, "topup_data": None}
+            {
+                "order-id": str(i),
+                "order-time": "t",
+                "client-name": "Bob",
+                "price": 1.0,
+                "status": "s",
+                "name": "A",
+                "category": "c",
+                "amount": 1,
+                "topup_data": None,
+            }
             for i in range(5)
         ]
         account._parser.parse_my_sells.return_value = {"sells": sells, "next_page": "p2"}
@@ -123,8 +158,9 @@ class TestProfile:
     async def test_success_with_explicit_user_id(self, manager, account):
         account._client.get_user_profile.return_value = "<html></html>"
         account._parser.parse_profile.return_value = {
-            "category-ids": ["1"], "lots": [{"name": "Lot1", "id": "10"}],
-            "reviews": [{"text": "OK", "stars": 5, "author": "A", "order_id": "1"}]
+            "category-ids": ["1"],
+            "lots": [{"name": "Lot1", "id": "10"}],
+            "reviews": [{"text": "OK", "stars": 5, "author": "A", "order_id": "1"}],
         }
         result = await manager.profile(user_id="42")
         assert isinstance(result, Profile)

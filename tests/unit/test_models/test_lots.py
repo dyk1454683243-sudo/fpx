@@ -1,4 +1,5 @@
 """Тесты моделей лотов: CurrentLotInfo, LotInfo, LotCreationFields."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -134,17 +135,19 @@ class TestLotInfo:
 class TestLotEditorAndSimpleModels:
     def test_lot_editor_model(self):
         editor = LotEditor(
-            csrf_token="tok", form_created_at="ts", offer_id="1",
-            node_id="2", location="", deleted="", fields={"a": "b"}
+            csrf_token="tok",
+            form_created_at="ts",
+            offer_id="1",
+            node_id="2",
+            location="",
+            deleted="",
+            fields={"a": "b"},
         )
         assert editor.csrf_token == "tok"
         assert editor.fields == {"a": "b"}
 
     def test_category_last_lot_model(self):
-        lot = CategoryLastLot(
-            category_id="1", filtration="все", price=99.0,
-            offer_id="5", owner_username="Bob"
-        )
+        lot = CategoryLastLot(category_id="1", filtration="все", price=99.0, offer_id="5", owner_username="Bob")
         assert lot.price == 99.0
         assert lot.owner_username == "Bob"
 
@@ -258,9 +261,7 @@ class TestLotCreationFields:
         assert fields.get_field("fields[images]").value == "1,2,3"
 
     def test_validate_returns_true_when_required_fields_present(self):
-        fields = make_lot_creation_fields(
-            price="100", amount="1", short_desc_ru="Ru", short_desc_en="En"
-        )
+        fields = make_lot_creation_fields(price="100", amount="1", short_desc_ru="Ru", short_desc_en="En")
         assert fields.validate() is True
 
     def test_validate_returns_false_when_required_field_missing(self):

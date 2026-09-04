@@ -5,6 +5,7 @@
 хендлеров не приводят к деградации/некорректному поведению при большом
 объёме одновременно обрабатываемых событий.
 """
+
 import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock
@@ -30,17 +31,27 @@ class TestRouterDispatchStress:
         call_counts = {i: 0 for i in range(N_HANDLERS)}
 
         for i in range(N_HANDLERS):
+
             def make_handler(idx):
                 async def handler(msg: Message):
                     call_counts[idx] += 1
+
                 return handler
 
-            router._handlers['message'].append({
-                'function': make_handler(i),
-                'filter_text': None, 'contains': None, 'regex': None,
-                'custom': None, 'mapping': None, 'state': None,
-                'ignore_chat_id': None, 'ignore_sender': None, 'priority': 0,
-            })
+            router._handlers["message"].append(
+                {
+                    "function": make_handler(i),
+                    "filter_text": None,
+                    "contains": None,
+                    "regex": None,
+                    "custom": None,
+                    "mapping": None,
+                    "state": None,
+                    "ignore_chat_id": None,
+                    "ignore_sender": None,
+                    "priority": 0,
+                }
+            )
 
         runner = MagicMock()
         runner.router = router
@@ -94,14 +105,14 @@ class TestChatCacheComparisonStress:
         runner = MagicMock()
         runner.router = router
         old_msgs = [
-            {'sender': f'user{i}', 'chat_id': str(i), 'last_msg': {'node_id': i, 'message': f'old-{i}'}}
+            {"sender": f"user{i}", "chat_id": str(i), "last_msg": {"node_id": i, "message": f"old-{i}"}}
             for i in range(2000)
         ]
         new_msgs = [
-            {'sender': f'user{i}', 'chat_id': str(i), 'last_msg': {'node_id': i, 'message': f'new-{i}'}}
+            {"sender": f"user{i}", "chat_id": str(i), "last_msg": {"node_id": i, "message": f"new-{i}"}}
             for i in range(2000)
         ]
-        runner._cache = {'msgs': new_msgs, 'old_msgs': old_msgs}
+        runner._cache = {"msgs": new_msgs, "old_msgs": old_msgs}
         chat_runner = ChatRunner(runner)
 
         start = time.monotonic()

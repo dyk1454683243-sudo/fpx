@@ -1,4 +1,5 @@
 """Тесты FpxParser — объединяет все парсеры через множественное наследование."""
+
 from fpx._parsers import FpxParser
 
 

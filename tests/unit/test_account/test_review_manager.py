@@ -1,4 +1,5 @@
 """Тесты ReviewManager — получение отзыва заказа и ответ на отзыв."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -26,9 +27,7 @@ def manager(account):
 class TestGetReview:
     @pytest.mark.asyncio
     async def test_success(self, manager, account):
-        account.order.get_order_details.return_value = Order(
-            review={"text": "Круто", "stars": 5, "answer": "Спасибо"}
-        )
+        account.order.get_order_details.return_value = Order(review={"text": "Круто", "stars": 5, "answer": "Спасибо"})
         result = await manager.get_review("order-1")
         assert isinstance(result, Review)
         assert result.text == "Круто"
@@ -51,6 +50,7 @@ class TestReviewAnswer:
 
         async def fake_get_user_data():
             account.data.user_id = "42"
+
         account.profile.get_user_data.side_effect = fake_get_user_data
         response = MagicMock()
         response.json.return_value = {"content": "Ответ"}
@@ -61,6 +61,7 @@ class TestReviewAnswer:
     @pytest.mark.asyncio
     async def test_json_decode_error_raises(self, manager, account):
         import json
+
         response = MagicMock()
         response.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
         account._client.answer_review.return_value = response

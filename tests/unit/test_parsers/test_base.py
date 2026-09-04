@@ -1,4 +1,5 @@
 """Тесты BaseParser — вспомогательные статические методы."""
+
 from bs4 import BeautifulSoup
 
 from fpx._parsers._base import BaseParser

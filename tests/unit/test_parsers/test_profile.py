@@ -1,4 +1,5 @@
 """Тесты ProfileParser — баланс, профиль, продажи, главная."""
+
 import pytest
 
 from fpx._parsers._profile import ProfileParser
@@ -67,7 +68,7 @@ class TestProfileParser:
         """
         res = ProfileParser.parse_my_sells(html)
         assert len(res) == 1
-        result = res['sells']
+        result = res["sells"]
         assert result[0]["order-id"] == "100"
         assert result[0]["status"] == "Оплачен"
         assert result[0]["client-name"] == "Вася"

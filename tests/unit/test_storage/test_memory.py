@@ -1,4 +1,5 @@
 """Тесты MemoryStorage — хранение стейта FSM в памяти."""
+
 import pytest
 
 from fpx.utils.storage.memory import MemoryStorage

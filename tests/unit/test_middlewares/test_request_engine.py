@@ -1,4 +1,5 @@
 """Тесты RequestEngine — обёртка над httpx с ретраями, csrf и антифлудом."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import httpx
@@ -72,6 +73,7 @@ class TestRequestEngineCsrf:
 
         async def fake_get_user_data():
             account.data._csrf_token = "fresh_token"
+
         account.profile.get_user_data = AsyncMock(side_effect=fake_get_user_data)
         http_client.request = AsyncMock(return_value=make_response(200))
         engine = RequestEngine(account, http_client)
@@ -187,9 +189,7 @@ class TestRequestEngineTimeouts:
     @pytest.mark.asyncio
     async def test_connect_timeout_recovers_on_second_attempt(self, account, http_client, monkeypatch):
         monkeypatch.setattr("asyncio.sleep", AsyncMock())
-        http_client.request = AsyncMock(
-            side_effect=[httpx.ConnectTimeout("timeout"), make_response(200)]
-        )
+        http_client.request = AsyncMock(side_effect=[httpx.ConnectTimeout("timeout"), make_response(200)])
         engine = RequestEngine(account, http_client)
         response = await engine.execute("GET", "/chat/")
         assert response.status_code == 200

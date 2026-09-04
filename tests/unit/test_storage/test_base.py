@@ -1,4 +1,5 @@
 """Тесты BaseStorage — базовый интерфейс хранилища FSM."""
+
 import pytest
 
 from fpx.utils.storage.base import BaseStorage

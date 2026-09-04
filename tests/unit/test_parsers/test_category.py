@@ -1,4 +1,5 @@
 """Тесты CategoryParser — парсинг главной страницы со списком игр/категорий."""
+
 from fpx._parsers._category import CategoryParser
 from fpx.models.account import Game
 

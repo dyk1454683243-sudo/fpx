@@ -1,4 +1,5 @@
 """Тесты Runner — оркестрация фонового опроса, кеш, обработка ошибок."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
@@ -21,9 +22,9 @@ def runner(account):
 
 class TestRunnerInit:
     def test_default_cache_shape(self, runner):
-        assert runner._cache['msgs'] == []
-        assert runner._cache['orders'] == []
-        assert runner._cache['reviews'] == []
+        assert runner._cache["msgs"] == []
+        assert runner._cache["orders"] == []
+        assert runner._cache["reviews"] == []
         assert runner.is_running is True
         assert runner._cache_is_updated is False
         assert runner.storage is None
@@ -148,11 +149,11 @@ class TestRunLoop:
         sleep_mock = AsyncMock()
         monkeypatch.setattr("asyncio.sleep", sleep_mock)
 
-        call_count = {'n': 0}
+        call_count = {"n": 0}
 
         async def cache_runner(*args):
-            call_count['n'] += 1
-            if call_count['n'] == 1:
+            call_count["n"] += 1
+            if call_count["n"] == 1:
                 raise fpx_err.FpxRequestError("boom")
             runner.is_running = False
 
@@ -164,11 +165,11 @@ class TestRunLoop:
     async def test_account_error_sleeps_5_and_continues(self, runner, monkeypatch):
         sleep_mock = AsyncMock()
         monkeypatch.setattr("asyncio.sleep", sleep_mock)
-        call_count = {'n': 0}
+        call_count = {"n": 0}
 
         async def cache_runner(*args):
-            call_count['n'] += 1
-            if call_count['n'] == 1:
+            call_count["n"] += 1
+            if call_count["n"] == 1:
                 raise fpx_err.FpxAccountError("boom")
             runner.is_running = False
 
@@ -180,11 +181,11 @@ class TestRunLoop:
     async def test_httpx_error_sleeps_timer(self, runner, monkeypatch):
         sleep_mock = AsyncMock()
         monkeypatch.setattr("asyncio.sleep", sleep_mock)
-        call_count = {'n': 0}
+        call_count = {"n": 0}
 
         async def cache_runner(*args):
-            call_count['n'] += 1
-            if call_count['n'] == 1:
+            call_count["n"] += 1
+            if call_count["n"] == 1:
                 raise httpx.ConnectError("boom")
             runner.is_running = False
 
