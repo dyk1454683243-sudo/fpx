@@ -105,10 +105,15 @@ class Runner:
         ])
         results = await asyncio.gather(*tasks, return_exceptions=True)
         is_good = True
+        to_raise = None
         for result in results:
             if isinstance(result, Exception):
                 await self._handle_error(None, result)
+                if isinstance(result, (fpx_err.FpxRequestError, fpx_err.FpxAccountError)) and to_raise is None:
+                    to_raise = result
                 is_good = False
+        if to_raise:
+            raise to_raise
         if is_good:
             self._cache_is_updated = True
             for handler in self.router._handlers['startup']:
@@ -135,9 +140,14 @@ class Runner:
             self._review._check_reviews()
         ])
         results = await asyncio.gather(*tasks, return_exceptions=True)
+        to_raise = None
         for result in results:
             if isinstance(result, Exception):
                 await self._handle_error(None, result)
+                if isinstance(result, (fpx_err.FpxRequestError, fpx_err.FpxAccountError)) and to_raise is None:
+                    to_raise = result
+        if to_raise:
+            raise to_raise
 
     async def _handle_error(self, event: Any, exception: Exception):
         '''Централизованная обработка любых ошибок.
