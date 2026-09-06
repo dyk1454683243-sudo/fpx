@@ -20,17 +20,18 @@ variables:
 
 unit-tests:
   stage: test
-  image: python:${PYTHON_VERSION}
+  tags: [self-hosted]
   parallel:
     matrix:
-      - PYTHON_VERSION: ["3.10", "3.11", "3.12"]
+      - PYTHON_VERSION: ["3.10"]
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
   script:
-    - python -m pip install --upgrade pip
+    - python3 -m pip install --upgrade pip
     - pip install -e .
     - pip install pytest pytest-asyncio pytest-cov beautifulsoup4 httpx
+    - export PATH="$HOME/.local/bin:$PATH"
     - cd tests
     - pytest unit -v --tb=short --cov=fpx --cov-report=xml --cov-report=term
   artifacts:
@@ -44,16 +45,17 @@ unit-tests:
 
 stress-tests:
   stage: stress-test
-  image: python:3.12
+  tags: [self-hosted]
   needs: ["unit-tests"]
   allow_failure: true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
   script:
-    - python -m pip install --upgrade pip
+    - python3 -m pip install --upgrade pip
     - pip install -e .
     - pip install pytest pytest-asyncio beautifulsoup4 httpx
+    - export PATH="$HOME/.local/bin:$PATH"
     - cd tests
     - pytest stress -v --tb=short -m stress
 
@@ -66,7 +68,7 @@ publish:
     PYPI_ID_TOKEN:
       aud: pypi
   script:
-    - python -m pip install --upgrade pip
+    - python3 -m pip install --upgrade pip
     - pip install build twine
-    - python -m build
+    - python3 -m build
     - twine upload dist/*
