@@ -171,7 +171,7 @@ class ChatRunner:
             await self.runner._account.profile.get_user_data()
         if self.runner._account.data.username == message.sender:
             return
-        msg_text = message.text.lower()
+        msg_text = message.text.lower() if message.text else message.text
         current_state = await self.runner.storage.get_state(message.chat_id)
         state_ctx = FSMContext(storage=self.runner.storage, chat_id=message.chat_id)
         try:
