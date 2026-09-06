@@ -59,9 +59,12 @@ stress-tests:
 
 publish:
   stage: publish
-  image: python:3.11
+  tags: [self-hosted]
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+  id_tokens:
+    PYPI_ID_TOKEN:
+      aud: pypi
   script:
     - python -m pip install --upgrade pip
     - pip install build twine
