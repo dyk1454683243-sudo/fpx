@@ -4,7 +4,7 @@ import re
 from fpx.classes.account.account import Account
 from fpx.classes.runner.runner import Runner
 from fpx.fsm import BaseStorage, MemoryStorage
-from fpx.utils.errors import FpxInvalideCookies
+from fpx.utils.errors import FpxAuthError
 
 
 GKEY_PATTERN = re.compile(r"^[a-z0-9]{32}$")
@@ -20,11 +20,11 @@ class FunPayTools:
             http_client = None
         ):
         if not gkey or not gseal:
-            raise FpxInvalideCookies("gkey и gseal не могут быть None.")
+            raise FpxAuthError("gkey и gseal не могут быть None.")
         if not GKEY_PATTERN.match(gkey):
-            raise FpxInvalideCookies("Неверный формат gkey, перепроверь его.")
+            raise FpxAuthError("Неверный формат gkey, перепроверь его.")
         if not GSEAL_PATTERN.match(gseal):
-            raise FpxInvalideCookies('Неверный формат gseal, перепроверь его.')
+            raise FpxAuthError('Неверный формат gseal, перепроверь его.')
         self._cookies = {
             'golden_key': gkey,
             'golden_seal': gseal,
