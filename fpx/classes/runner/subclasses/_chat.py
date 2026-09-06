@@ -9,77 +9,91 @@ from fpx.utils import errors as fpx_err
 
 logger = logging.getLogger("fpx.chat_runner")
 
+
 class ChatRunner:
     def __init__(self, runner):
         self.runner = runner
         self._chat_last_ids = {}
 
     def _compare_chat_cache(self):
-        '''
+        """
         Сравнивает старый кеш сообщений с новым, если находит отличия,
         выносит сообщение в список,
         после чего возвращает полный список
-        '''
+        """
         result = []
-        if self.runner._cache['msgs'] != self.runner._cache['old_msgs']:
-            for message in self.runner._cache['msgs']:
-                if message not in self.runner._cache['old_msgs']:
+        if self.runner._cache["msgs"] != self.runner._cache["old_msgs"]:
+            for message in self.runner._cache["msgs"]:
+                if message not in self.runner._cache["old_msgs"]:
                     stop_words = (
-                        'оплатил заказ', 'можете перейти в discord', 'написал отзыв', 'изменил отзыв',
-                        'вернул деньги', 'подтвердил успешное выполнение', 'удалил отзыв',
-                        'оплатив замовлення', 'написав відгук', 'змінив відгук', 'повернув гроші',
-                        'підтвердив успішне виконання', 'видалив відгук', 'has paid for order',
-                        'you can use Discord', 'given feedback', 'changed feedback',
-                        'has refunded', 'has confirmed that', 'deleted their feedback',
-                        'replied to their'
-                        )
-                    msg_lower = message['last_msg']['message'].lower()
+                        "оплатил заказ",
+                        "можете перейти в discord",
+                        "написал отзыв",
+                        "изменил отзыв",
+                        "вернул деньги",
+                        "подтвердил успешное выполнение",
+                        "удалил отзыв",
+                        "оплатив замовлення",
+                        "написав відгук",
+                        "змінив відгук",
+                        "повернув гроші",
+                        "підтвердив успішне виконання",
+                        "видалив відгук",
+                        "has paid for order",
+                        "you can use Discord",
+                        "given feedback",
+                        "changed feedback",
+                        "has refunded",
+                        "has confirmed that",
+                        "deleted their feedback",
+                        "replied to their",
+                    )
+                    msg_lower = message["last_msg"]["message"].lower()
                     if not any(word in msg_lower for word in stop_words):
                         result.append(
                             Message(
-                                node_msg_id=message['last_msg']['node_id'],
-                                sender=message['sender'],
-                                chat_id=message['chat_id'],
-                                text=message['last_msg']['message'],
-                                is_system=False
+                                node_msg_id=message["last_msg"]["node_id"],
+                                sender=message["sender"],
+                                chat_id=message["chat_id"],
+                                text=message["last_msg"]["message"],
+                                is_system=False,
                             )
                         )
         return result
 
     async def _update_chat_cache(self):
-        '''
+        """
         Обновляет кеш последних чатов
-        '''
+        """
         chats = await self.runner._account.chat.get_chats()
         result = []
         for chat in chats:
             chat = {
-                'sender': chat.username,
-                'chat_id': chat.id,
-                'last_msg': {
-                    'node_id': chat.node_msg_id,
-                    'message': chat.last_msg
-                }
+                "sender": chat.username,
+                "chat_id": chat.id,
+                "last_msg": {"node_id": chat.node_msg_id, "message": chat.last_msg},
             }
             result.append(chat)
-        self.runner._cache['old_msgs'] = self.runner._cache['msgs']
-        self.runner._cache['msgs'] = result
+        self.runner._cache["old_msgs"] = self.runner._cache["msgs"]
+        self.runner._cache["msgs"] = result
 
     async def _process_message(self, message: Message, state_ctx):
         if not message.text:
             return False
         full_text = message.text.lower().strip()
-        for cmd_handler in self.runner.router._handlers['commands']:
-            target_command = cmd_handler['command']
+        for cmd_handler in self.runner.router._handlers["commands"]:
+            target_command = cmd_handler["command"]
             for cmd_text, target_function in target_command.items():
                 cmd_lower = cmd_text.lower()
-                if full_text == cmd_lower or full_text.startswith(cmd_lower + ' '):
-                    args_str = full_text[len(cmd_lower):].strip()
+                if full_text == cmd_lower or full_text.startswith(cmd_lower + " "):
+                    args_str = full_text[len(cmd_lower) :].strip()
                     args = args_str.split() if args_str else []
                     sig = inspect.signature(target_function)
                     text_param_names = [
-                        name for name, param in sig.parameters.items()
-                        if param.annotation is str and param.default is inspect.Parameter.empty
+                        name
+                        for name, param in sig.parameters.items()
+                        if param.annotation is str
+                        and param.default is inspect.Parameter.empty
                         and param.annotation not in (Message, FSMContext)
                     ]
                     if len(args) < len(text_param_names):
@@ -152,17 +166,17 @@ class ChatRunner:
 
     async def _check_filters(self, message: Message, handler):
         msg_text = message.text.lower()
-        if not self._check_text_filter(msg_text, handler['filter_text'], handler['mapping']):
+        if not self._check_text_filter(msg_text, handler["filter_text"], handler["mapping"]):
             return False
-        if not self._check_contains_filter(msg_text, handler['contains']):
+        if not self._check_contains_filter(msg_text, handler["contains"]):
             return False
-        if not self._check_regex(msg_text, handler['regex']):
+        if not self._check_regex(msg_text, handler["regex"]):
             return False
-        if not self._chat_id_check(message, handler['ignore_chat_id']):
+        if not self._chat_id_check(message, handler["ignore_chat_id"]):
             return False
-        if not self._sender_check(message, handler['ignore_sender']):
+        if not self._sender_check(message, handler["ignore_sender"]):
             return False
-        if not await self._custom_check(message, handler['custom']):
+        if not await self._custom_check(message, handler["custom"]):
             return False
         return True
 
@@ -178,29 +192,27 @@ class ChatRunner:
             if await self._process_message(message, state_ctx):
                 return
         except Exception as e:
-            logger.debug(f'Ошибка при обработке сообщения: {e}', exc_info=True)
+            logger.debug(f"Ошибка при обработке сообщения: {e}", exc_info=True)
             await self.runner._handle_error(event=message, exception=e)
             return
-        for handler in self.runner.router._handlers['message']:
-            if handler['state'] != current_state:
+        for handler in self.runner.router._handlers["message"]:
+            if handler["state"] != current_state:
                 continue
             if not await self._check_filters(message, handler):
                 continue
-            if handler['mapping'] is not None:
+            if handler["mapping"] is not None:
                 matched = False
-                for trigger, reply in handler['mapping'].items():
+                for trigger, reply in handler["mapping"].items():
                     if msg_text.startswith(trigger.lower()):
                         formatted_reply = reply.format(
-                            sender=message.sender,
-                            chat_id=message.chat_id,
-                            text=message.text
+                            sender=message.sender, chat_id=message.chat_id, text=message.text
                         )
                         await message.answer(formatted_reply)
                         matched = True
                         break
                 if not matched:
                     continue
-            await self.runner.router.invoke(handler['function'], message, state_ctx)
+            await self.runner.router.invoke(handler["function"], message, state_ctx)
             break
 
     def get_last_id(self, chat_id):
@@ -210,6 +222,7 @@ class ChatRunner:
         await self._update_chat_cache()
         chats = self._compare_chat_cache()
         if chats:
+
             async def process_single_chat(chat_cache_obj):
                 chat_msg = None
                 try:
@@ -220,14 +233,14 @@ class ChatRunner:
                         if message is None:
                             return
                         if int(message.node_msg_id) > int(last_node_id):
-                            #stop_list = ['изображение', 'image', 'зображення']
+                            # stop_list = ['изображение', 'image', 'зображення']
                             text = message.text
                             chat_msg = Message(
                                 node_msg_id=message.node_msg_id,
                                 sender=message.sender,
                                 chat_id=chat_cache_obj.chat_id,
                                 text=text,
-                                is_system=message.is_system
+                                is_system=message.is_system,
                             )
                             chat_msg._client = self.runner
                             await self._trigger_message_handlers(chat_msg)
@@ -237,5 +250,6 @@ class ChatRunner:
                 except Exception as e:
                     logger.debug(f"Ошибка при параллельной обработке чата {chat_cache_obj.chat_id}: {e}", exc_info=True)
                     await self.runner._handle_error(event=chat_msg, exception=e)
+
             tasks = [process_single_chat(chat) for chat in chats]
             await asyncio.gather(*tasks)

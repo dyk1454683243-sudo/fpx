@@ -51,19 +51,23 @@ pip install -U fpx-engine
 import asyncio
 from fpx import FunPayTools, types
 
+
 async def main():
     # инициализируем аккаунт (golden_key и golden_seal - куки твоего аккаунта на funpay.com)
-    fp = FunPayTools('golden_key', 'golden_seal')
+    fp = FunPayTools("golden_key", "golden_seal")
+
     # ловим сообщение
     @fp.router.on_message()
     async def answer_message(message: types.Message):
         # отвечаем на сообщение
-        await message.answer('Привет')
-    #запускаем приём событий
+        await message.answer("Привет")
+
+    # запускаем приём событий
     await fp.runner.start_polling(3, is_background=True)
     await fp.runner.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())
 ```
 

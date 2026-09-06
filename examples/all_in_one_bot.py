@@ -4,8 +4,9 @@ from fpx import FunPayTools, types
 
 CATEGORY_TO_WATCH = 1316
 
+
 async def main():
-    fp = FunPayTools('YOUR_GOLDEN_KEY', 'YOUR_GOLDEN_SEAL')
+    fp = FunPayTools("YOUR_GOLDEN_KEY", "YOUR_GOLDEN_SEAL")
 
     # ─── Старт ───
     @fp.router.on_startup()
@@ -47,12 +48,9 @@ async def main():
         print(f"[ERROR] Произошла ошибка: {exception}")
 
     # ─── Запуск ───
-    await fp.runner.start_polling(
-        3,
-        is_background=True,
-        watch_lots=[CATEGORY_TO_WATCH]
-    )
+    await fp.runner.start_polling(3, is_background=True, watch_lots=[CATEGORY_TO_WATCH])
     await fp.runner.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())

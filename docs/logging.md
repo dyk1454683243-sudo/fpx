@@ -23,9 +23,9 @@
 import logging
 
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+handler.setFormatter(logging.Formatter("%(asctime)s [%(name)s] %(levelname)s: %(message)s"))
 
-fpx_logger = logging.getLogger('fpx')
+fpx_logger = logging.getLogger("fpx")
 fpx_logger.setLevel(logging.DEBUG)
 fpx_logger.addHandler(handler)
 ```
@@ -43,7 +43,7 @@ fpx_logger.addHandler(handler)
 ## Логировать только конкретный модуль
 
 ```python
-logging.getLogger('fpx.chat_runner').setLevel(logging.DEBUG)
+logging.getLogger("fpx.chat_runner").setLevel(logging.DEBUG)
 ```
 
 ---
@@ -55,12 +55,9 @@ import logging
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-    handlers=[
-        logging.FileHandler('fpx.log', encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    handlers=[logging.FileHandler("fpx.log", encoding="utf-8"), logging.StreamHandler()],
 )
 
-logging.getLogger('fpx').setLevel(logging.DEBUG)
+logging.getLogger("fpx").setLevel(logging.DEBUG)
 ```

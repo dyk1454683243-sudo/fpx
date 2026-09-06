@@ -29,27 +29,31 @@
 ```python
 from fpx import types
 
+
 @fp.router.on_message()
 async def any_msg(message: types.Message):
-    print(f'{message.sender}: {message.text}')
+    print(f"{message.sender}: {message.text}")
 ```
 
 **Пример с фильтрами:**
 
 ```python
-@fp.router.on_message(text='!привет')
+@fp.router.on_message(text="!привет")
 async def cmd_hello(message: types.Message):
-    await message.answer('Привет')
+    await message.answer("Привет")
 
-@fp.router.on_message(contains=['купить', 'заказать'])
+
+@fp.router.on_message(contains=["купить", "заказать"])
 async def buy_intent(message: types.Message):
-    await message.answer('Хочешь купить? Пиши !товар')
+    await message.answer("Хочешь купить? Пиши !товар")
 
-@fp.router.on_message(regex=r'^id\d+$')
+
+@fp.router.on_message(regex=r"^id\d+$")
 async def by_regex(message: types.Message):
-    await message.answer('Нашёл ID')
+    await message.answer("Нашёл ID")
 
-@fp.router.on_message(mapping={'привет': 'Привет!', 'как дела': 'Норм'})
+
+@fp.router.on_message(mapping={"привет": "Привет!", "как дела": "Норм"})
 async def mapped(message: types.Message):
     # ответ уже отправлен автоматически, этот хендлер всё равно вызовется
     pass
@@ -67,15 +71,14 @@ async def mapped(message: types.Message):
 
 ```python
 async def start_cmd(message: types.Message):
-    await message.answer('Привет, введи ник')
+    await message.answer("Привет, введи ник")
+
 
 async def help_cmd(message: types.Message):
-    await message.answer('Команды: !start, !help')
+    await message.answer("Команды: !start, !help")
 
-fp.router.message_commands({
-    '!start': start_cmd,
-    '!help': help_cmd
-})
+
+fp.router.message_commands({"!start": start_cmd, "!help": help_cmd})
 ```
 
 В функцию-команду автоматически передаются:
@@ -88,14 +91,17 @@ fp.router.message_commands({
 ```python
 from fpx import Dependency, types
 
+
 async def get_user(message: types.Message):
-    return {'name': message.sender, 'vip': True}
+    return {"name": message.sender, "vip": True}
+
 
 async def vip_cmd(message: types.Message, user: dict = Dependency(get_user)):
-    if user['vip']:
-        await message.answer('Ты VIP')
+    if user["vip"]:
+        await message.answer("Ты VIP")
 
-fp.router.message_commands({'!vip': vip_cmd})
+
+fp.router.message_commands({"!vip": vip_cmd})
 ```
 
 Команды проверяются **до** обычных `on_message` хендлеров. Если команда сработала — обычные хендлеры для этого сообщения не вызываются.
@@ -111,7 +117,7 @@ fp.router.message_commands({'!vip': vip_cmd})
 ```python
 @fp.router.on_orders()
 async def all_orders(order: types.Order):
-    print(f'Заказ {order.order_id}: {order.status}')
+    print(f"Заказ {order.order_id}: {order.status}")
 ```
 
 ### `@fp.router.on_new_order(mapping=None)`
@@ -119,10 +125,10 @@ async def all_orders(order: types.Order):
 Только новые оплаченные заказы (статус "Оплачен" / "paid" / "відкрито").
 
 ```python
-@fp.router.on_new_order(mapping=['ключ', 'key'])
+@fp.router.on_new_order(mapping=["ключ", "key"])
 async def auto_key(order: types.Order):
     # сработает только если в описании есть "ключ" или "key"
-    await order.answer('Вот твой ключ: ABC-123')
+    await order.answer("Вот твой ключ: ABC-123")
 ```
 
 ### `@fp.router.on_confirmed_orders(mapping=None)`
@@ -132,7 +138,7 @@ async def auto_key(order: types.Order):
 ```python
 @fp.router.on_confirmed_orders()
 async def confirmed(order: types.Order):
-    await order.answer('Спасибо за подтверждение!')
+    await order.answer("Спасибо за подтверждение!")
 ```
 
 ### `@fp.router.on_refunded_orders(mapping=None)`
@@ -142,7 +148,7 @@ async def confirmed(order: types.Order):
 ```python
 @fp.router.on_refunded_orders()
 async def refund(order: types.Order):
-    print(f'Возврат по заказу {order.order_id}')
+    print(f"Возврат по заказу {order.order_id}")
 ```
 
 ### `fp.router.order_targets(dict)`
@@ -151,10 +157,11 @@ async def refund(order: types.Order):
 
 ```python
 async def sell_guide(order: types.Order):
-    print(f'ЗАКАААЗ')
-    await order.answer('Привет, введи свой ник')
+    print(f"ЗАКАААЗ")
+    await order.answer("Привет, введи свой ник")
 
-fp.router.order_targets({'id: 133': sell_guide})
+
+fp.router.order_targets({"id: 133": sell_guide})
 ```
 
 ---
@@ -168,11 +175,12 @@ fp.router.order_targets({'id: 133': sell_guide})
 ```python
 @fp.router.on_new_review(stars=5)
 async def good_review(review: types.CurReview):
-    await review.answer('Спасибо!')
+    await review.answer("Спасибо!")
+
 
 @fp.router.on_new_review(stars=1)
 async def bad_review(review: types.CurReview):
-    await review.message_author('Давай решим проблему')
+    await review.message_author("Давай решим проблему")
 ```
 
 Можно вешать несколько декораторов на одну функцию:
@@ -182,7 +190,7 @@ async def bad_review(review: types.CurReview):
 @fp.router.on_new_review(stars=2)
 @fp.router.on_new_review(stars=3)
 async def handle_bad(review: types.CurReview):
-    print(f'Плохой отзыв: {review.stars} звезд')
+    print(f"Плохой отзыв: {review.stars} звезд")
 ```
 
 ---
@@ -196,7 +204,7 @@ async def handle_bad(review: types.CurReview):
 ```python
 @fp.router.on_lot_category()
 async def lot_changed(lot: types.CategoryLastLot):
-    print(f'Новая цена в категории {lot.category_id}: {lot.price}')
+    print(f"Новая цена в категории {lot.category_id}: {lot.price}")
 ```
 
 ### `@fp.router.on_chip_category()`
@@ -206,7 +214,7 @@ async def lot_changed(lot: types.CategoryLastLot):
 ```python
 @fp.router.on_chip_category()
 async def chip_changed(lot: types.CategoryLastLot):
-    print(f'Чипсы: новая цена {lot.price}, лот {lot.offer_id}')
+    print(f"Чипсы: новая цена {lot.price}, лот {lot.offer_id}")
 ```
 
 ---
@@ -220,7 +228,7 @@ async def chip_changed(lot: types.CategoryLastLot):
 ```python
 @fp.router.on_startup()
 async def startup():
-    print('Бот запущен!')
+    print("Бот запущен!")
 ```
 
 ### `@fp.router.on_flood()`
@@ -230,7 +238,7 @@ async def startup():
 ```python
 @fp.router.on_flood()
 async def flood_handler(seconds):
-    print(f'Флуд на {seconds} секунд')
+    print(f"Флуд на {seconds} секунд")
 ```
 
 ### `@fp.router.on_error()`
@@ -240,7 +248,7 @@ async def flood_handler(seconds):
 ```python
 @fp.router.on_error()
 async def error_handler(message, error):
-    print(f'Ошибка: {error}')
+    print(f"Ошибка: {error}")
 ```
 
 ---
@@ -258,9 +266,10 @@ from fpx import Router, types
 
 other_router = Router()
 
-@other_router.on_message(text='!test')
+
+@other_router.on_message(text="!test")
 async def test(message: types.Message):
-    await message.answer('OK')
+    await message.answer("OK")
 ```
 
 **main.py:**

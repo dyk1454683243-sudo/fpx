@@ -25,7 +25,7 @@ print(data.csrf_token)
 ```python
 orders = await fp.account.profile.get_my_sells(limit=25)
 for order in orders:
-    print(f'#{order.order_id}: {order.name} — {order.price} ({order.status})')
+    print(f"#{order.order_id}: {order.name} — {order.price} ({order.status})")
 ```
 
 `limit=0` — вернёт все заказы. Возвращает `list[Order]`.
@@ -36,11 +36,11 @@ for order in orders:
 
 ```python
 profile = await fp.account.profile.profile()
-print(f'Категорий: {len(profile.category_ids)}')
-print(f'Лотов: {len(profile.lots)}')
+print(f"Категорий: {len(profile.category_ids)}")
+print(f"Лотов: {len(profile.lots)}")
 
 for review in profile.reviews:
-    print(f'[{review.stars}/5] {review.author}: {review.text}')
+    print(f"[{review.stars}/5] {review.author}: {review.text}")
 ```
 
 Возвращает `Profile`:
@@ -54,9 +54,9 @@ for review in profile.reviews:
 
 ```python
 balance = await fp.account.profile.get_balance()
-print(f'{balance.rub} ₽')
-print(f'{balance.usd} $')
-print(f'{balance.eur} €')
+print(f"{balance.rub} ₽")
+print(f"{balance.usd} $")
+print(f"{balance.eur} €")
 ```
 
 Возвращает `Balance`.

@@ -6,12 +6,11 @@ from fpx.utils import errors as fpx_err
 
 
 class ProfileManager:
-
     def __init__(self, account):
         self._account = account
 
     async def get_user_data(self):
-        '''
+        """
         Запрашивает данные юзера, сохраняет их в кеш.
 
         Returns:
@@ -20,23 +19,23 @@ class ProfileManager:
                 - csrf_token (str): Нужен для любого post запроса на funpay.
         Raises:
             FpxGetUserDataError: ошибка запроса данных юзера
-        '''
+        """
         try:
-            stage = 'запроса данных FunPay'
+            stage = "запроса данных FunPay"
             html = await self._account._client.get_main_menu()
-            stage = 'парсинга данных'
+            stage = "парсинга данных"
             data = self._account._parser.parse_main_menu(html)
-            stage = 'типизации данных'
-            self._account.data.username = data['username']
-            self._account.data.user_id = data['user-id']
-            self._account.data._csrf_token = data['csrf-token']
-            user_data = UserData(csrf_token=data['csrf-token'], user_id=data['user-id'])
+            stage = "типизации данных"
+            self._account.data.username = data["username"]
+            self._account.data.user_id = data["user-id"]
+            self._account.data._csrf_token = data["csrf-token"]
+            user_data = UserData(csrf_token=data["csrf-token"], user_id=data["user-id"])
         except Exception as e:
-            raise fpx_err.FpxGetUserDataError(f'При выполнении {stage} произошла ошибка: {e}')
+            raise fpx_err.FpxGetUserDataError(f"При выполнении {stage} произошла ошибка: {e}")
         return user_data
 
-    async def get_my_sells(self, limit:int=0):
-        '''
+    async def get_my_sells(self, limit: int = 0):
+        """
         Запрашивает страницу продаж юзера.
 
         Args:
@@ -54,33 +53,33 @@ class ProfileManager:
                 - category (str): Категория заказа.
         Raises:
             FpxGetUserSellsError: Ошибка запроса продаж
-        '''
+        """
         try:
             next_stage = True
             count_of_sells = 0
             data = []
-            stage = 'запроса данных FunPay'
+            stage = "запроса данных FunPay"
             html = await self._account._client.get_my_sells()
-            next_page_id = ''
+            next_page_id = ""
             while next_stage:
                 if next_page_id:
                     html = await self._account._client.get_next_sells(next_page_id)
-                stage = 'парсинга данных'
+                stage = "парсинга данных"
                 new_data = self._account._parser.parse_my_sells(html)
-                next_page_id = new_data.get('next_page')
+                next_page_id = new_data.get("next_page")
                 if not next_page_id:
                     next_stage = False
                     break
-                for i in new_data['sells']:
+                for i in new_data["sells"]:
                     data.append(i)
-                count_of_sells += len(new_data['sells'])
+                count_of_sells += len(new_data["sells"])
                 if limit != 0 and count_of_sells >= limit:
                     next_stage = False
                     break
                 await asyncio.sleep(3)
             counter = 0
         except Exception as e:
-            raise fpx_err.FpxGetUserSellsError(f'При выполнении {stage} произошла ошибка: {e}')
+            raise fpx_err.FpxGetUserSellsError(f"При выполнении {stage} произошла ошибка: {e}")
         if limit > 0:
             counter += 1
         result = []
@@ -88,22 +87,22 @@ class ProfileManager:
             if limit != 0 and counter > limit:
                 break
             order = Order(
-                order_id=i['order-id'],
-                order_time=i['order-time'],
-                client_name=i['client-name'],
-                price=i['price'],
-                status=i['status'],
-                name=i['name'],
-                category=i['category'],
-                amount=i['amount'],
-                topup_data=i.get('topup_data')
+                order_id=i["order-id"],
+                order_time=i["order-time"],
+                client_name=i["client-name"],
+                price=i["price"],
+                status=i["status"],
+                name=i["name"],
+                category=i["category"],
+                amount=i["amount"],
+                topup_data=i.get("topup_data"),
             )
             result.append(order)
             counter += 1
         return result
 
     async def profile(self, user_id=None):
-        '''
+        """
         Запрашивает профиль юзера.
         Args:
             user_id (str | int): Можно не передавать, если None,
@@ -120,34 +119,29 @@ class ProfileManager:
                     - item_name (str): Название заказа, под которым оставлен отзыв.
         Raises:
             FpxGetProfileError: Ошибка запроса профиля
-        '''
+        """
         target_id = user_id or self._account.data.user_id
         if not target_id:
             target = await self.get_user_data()
             target_id = target.user_id
         try:
-            step = 'запроса данных FunPay'
+            step = "запроса данных FunPay"
             html = await self._account._client.get_user_profile(target_id)
-            step = 'парсинга данных'
+            step = "парсинга данных"
             data = self._account._parser.parse_profile(html)
-            step = 'типизации данных'
-            lots_list = [LotInfo(name=lot['name'], id=lot['id']) for lot in data['lots']]
+            step = "типизации данных"
+            lots_list = [LotInfo(name=lot["name"], id=lot["id"]) for lot in data["lots"]]
             reviews = [
-                CurReview(
-                    text=rev['text'],
-                    stars=rev['stars'],
-                    author=rev['author'],
-                    order_id=rev['order_id']
-                )
-            for rev in data['reviews']
+                CurReview(text=rev["text"], stars=rev["stars"], author=rev["author"], order_id=rev["order_id"])
+                for rev in data["reviews"]
             ]
-            profile = Profile(category_ids=data['category-ids'], lots=lots_list, reviews=reviews)
+            profile = Profile(category_ids=data["category-ids"], lots=lots_list, reviews=reviews)
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f'При выполнении {step} произошла ошибка: {e}')
+            raise fpx_err.FpxGetProfileError(f"При выполнении {step} произошла ошибка: {e}")
         return profile
 
     async def get_balance(self):
-        '''
+        """
         Собирает баланс аккаунта.
 
         Returns:
@@ -157,12 +151,12 @@ class ProfileManager:
                 - eur (float): Баланс в евро
         Raises:
             FpxGetProfileError: Ошибка сбора баланса
-        '''
+        """
         try:
-            step = 'запрос данных FunPay'
+            step = "запрос данных FunPay"
             html = await self._account._client.get_finance_page()
-            step = 'парсинг данных'
+            step = "парсинг данных"
             balance = self._account._parser.parse_finanses(html)
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f'При сборе баланса, выполняя {step} произошла ошибка: {e}')
+            raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}")
         return balance

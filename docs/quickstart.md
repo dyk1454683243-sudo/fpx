@@ -29,17 +29,19 @@
 import asyncio
 from fpx import FunPayTools, types
 
+
 async def main():
-    fp = FunPayTools('ВАШ_GOLDEN_KEY', 'ВАШ_GOLDEN_SEAL')
+    fp = FunPayTools("ВАШ_GOLDEN_KEY", "ВАШ_GOLDEN_SEAL")
 
     @fp.router.on_message()
     async def echo(message: types.Message):
-        await message.answer(f'Ты написал: {message.text}')
+        await message.answer(f"Ты написал: {message.text}")
 
     await fp.runner.start_polling(3, is_background=True)
     await fp.runner.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())
 ```
 

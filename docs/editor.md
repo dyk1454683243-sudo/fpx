@@ -11,7 +11,7 @@
 Меняет цену лота. После изменения делает паузу 0.5 сек и проверяет что цена реально поменялась.
 
 ```python
-await fp.account.editor.change_lot_price('12345678', '150.50')
+await fp.account.editor.change_lot_price("12345678", "150.50")
 ```
 
 Цену передавать **строкой**.
@@ -23,13 +23,14 @@ await fp.account.editor.change_lot_price('12345678', '150.50')
 ```python
 from fpx import types
 
-MY_LOT_ID = '11223344'
+MY_LOT_ID = "11223344"
+
 
 @fp.router.on_lot_category()
 async def auto_dump(lot: types.CategoryLastLot):
     new_price = round(lot.price - 0.1, 2)
     await fp.account.editor.change_lot_price(MY_LOT_ID, str(new_price))
-    print(f'Перебил цену до {new_price}')
+    print(f"Перебил цену до {new_price}")
 ```
 
 ### `await fp.account.editor.toggle_off_lot(lot_id)`
@@ -37,7 +38,7 @@ async def auto_dump(lot: types.CategoryLastLot):
 Выключает лот (убирает из поиска).
 
 ```python
-await fp.account.editor.toggle_off_lot('12345678')
+await fp.account.editor.toggle_off_lot("12345678")
 ```
 
 ### `await fp.account.editor.toggle_on_lot(lot_id)`
@@ -45,7 +46,7 @@ await fp.account.editor.toggle_off_lot('12345678')
 Включает лот обратно.
 
 ```python
-await fp.account.editor.toggle_on_lot('12345678')
+await fp.account.editor.toggle_on_lot("12345678")
 ```
 
 Обе функции возвращают `True` при успехе. При ошибке — `FpxRequestError`.
@@ -58,5 +59,5 @@ await fp.account.editor.toggle_on_lot('12345678')
 from fpx.services import FunPayEditor
 
 editor = FunPayEditor(fp.account)
-await editor.change_lot_price('12345678', '150.50')
+await editor.change_lot_price("12345678", "150.50")
 ```

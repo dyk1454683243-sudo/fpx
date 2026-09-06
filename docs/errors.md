@@ -88,9 +88,9 @@ FpxError
 from fpx.utils.errors import FpxLotEditingError
 
 try:
-    await fp.account.editor.change_lot_price('123', '100')
+    await fp.account.editor.change_lot_price("123", "100")
 except FpxLotEditingError as e:
-    print(f'Цена не поменялась: {e.message}')
+    print(f"Цена не поменялась: {e.message}")
 ```
 
 **Ловим группу:**
@@ -99,8 +99,8 @@ except FpxLotEditingError as e:
 from fpx.utils.errors import FpxAccountError
 
 try:
-    await message.answer('Привет')
-    await fp.account.order.refund_order('123')
+    await message.answer("Привет")
+    await fp.account.order.refund_order("123")
 except FpxAccountError as e:
-    print(f'Ошибка: {e.message}')
+    print(f"Ошибка: {e.message}")
 ```

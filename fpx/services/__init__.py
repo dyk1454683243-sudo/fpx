@@ -8,12 +8,12 @@ from fpx.classes.account.subclasses.profile import ProfileManager
 from fpx.classes.account.subclasses.review import ReviewManager
 
 __all__ = [
-    'AddonsManager',
-    'CategoryManager',
-    'ChatManager',
-    'FunPayEditor',
-    'LotManager',
-    'OrderManager',
-    'ProfileManager',
-    'ReviewManager'
+    "AddonsManager",
+    "CategoryManager",
+    "ChatManager",
+    "FunPayEditor",
+    "LotManager",
+    "OrderManager",
+    "ProfileManager",
+    "ReviewManager",
 ]

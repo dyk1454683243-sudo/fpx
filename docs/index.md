@@ -38,17 +38,19 @@ pip install -U fpx-engine
 import asyncio
 from fpx import FunPayTools, types
 
+
 async def main():
-    fp = FunPayTools('golden_key', 'golden_seal')
+    fp = FunPayTools("golden_key", "golden_seal")
 
     @fp.router.on_message()
     async def answer_message(message: types.Message):
-        await message.answer('Привет')
+        await message.answer("Привет")
 
     await fp.runner.start_polling(3, is_background=True)
     await fp.runner.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())
 ```
 
@@ -63,11 +65,12 @@ if __name__ == '__main__':
 ```python
 from fpx import FunPayTools, types
 
-fp = FunPayTools('golden_key', 'golden_seal')
+fp = FunPayTools("golden_key", "golden_seal")
+
 
 @fp.router.on_message()
 async def new_msg(message: types.Message):
-    print(f'Сообщение: {message}')
+    print(f"Сообщение: {message}")
 ```
 
 Подходит для небольших скриптов и быстрого старта - меньше сущностей держать в голове.
@@ -79,15 +82,16 @@ async def new_msg(message: types.Message):
 ```python
 from fpx import FunPayTools, types
 
-fp = FunPayTools('golden_key', 'golden_seal')
+fp = FunPayTools("golden_key", "golden_seal")
 
 account = fp.account
 runner = fp.runner
 router = runner.router
 
+
 @router.on_message()
 async def new_msg(message: types.Message):
-    print(f'Сообщение: {message}')
+    print(f"Сообщение: {message}")
 ```
 
 `account`, `runner` и `router` - это те же самые объекты, что и `fp.account`, `fp.runner`, `fp.router`, просто извлечённые в отдельные переменные. Удобно когда `account` нужен в одном модуле, а хендлеры регистрируются в другом.
@@ -101,7 +105,7 @@ async def new_msg(message: types.Message):
 ```python
 chats = await fp.account.chat.get_chats()
 balance = await fp.account.profile.get_balance()
-await fp.account.order.refund_order('ABC123')
+await fp.account.order.refund_order("ABC123")
 ```
 
 **2. Через отдельный импорт менеджера из `fpx.services`**, если хочешь явно объявить нужный менеджер как отдельную переменную (например, чтобы передавать его между функциями):
@@ -112,7 +116,7 @@ from fpx.services import OrderManager, ChatManager
 order = OrderManager(fp.account)
 chat = ChatManager(fp.account)
 
-await order.refund_order('ABC123')
+await order.refund_order("ABC123")
 await chat.get_chats()
 ```
 
@@ -130,9 +134,10 @@ from fpx import Router, types
 
 router = Router()
 
-@router.on_message(text='!привет')
+
+@router.on_message(text="!привет")
 async def hello(message: types.Message):
-    await message.answer('Привет!')
+    await message.answer("Привет!")
 ```
 
 ```python
@@ -141,8 +146,9 @@ import asyncio
 from fpx import FunPayTools
 from handlers.messages import router as messages_router
 
+
 async def main():
-    fp = FunPayTools('golden_key', 'golden_seal')
+    fp = FunPayTools("golden_key", "golden_seal")
 
     # простой вариант:
     fp.router.include_router(messages_router)
@@ -153,7 +159,8 @@ async def main():
     await fp.runner.start_polling(3, is_background=True)
     await fp.runner.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())
 ```
 

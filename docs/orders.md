@@ -15,9 +15,10 @@
 ```python
 from fpx import types
 
+
 @fp.router.on_orders()
 async def any_order(order: types.Order):
-    print(f'Заказ {order.order_id}, статус: {order.status}')
+    print(f"Заказ {order.order_id}, статус: {order.status}")
 ```
 
 ### `@fp.router.on_new_order(mapping=None)`
@@ -27,16 +28,16 @@ async def any_order(order: types.Order):
 ```python
 @fp.router.on_new_order()
 async def new_order(order: types.Order):
-    print(f'Новый заказ #{order.order_id} от {order.client_name}')
+    print(f"Новый заказ #{order.order_id} от {order.client_name}")
     await order.answer(f'Заказ "{order.name}" принят!')
 ```
 
 **mapping** — список ключевых слов. Хендлер сработает только если одно из слов есть в описании заказа:
 
 ```python
-@fp.router.on_new_order(mapping=['ключ', 'key'])
+@fp.router.on_new_order(mapping=["ключ", "key"])
 async def auto_key(order: types.Order):
-    await order.answer('Вот твой ключ: XXX-YYY-ZZZ')
+    await order.answer("Вот твой ключ: XXX-YYY-ZZZ")
 ```
 
 ### `@fp.router.on_confirmed_orders(mapping=None)`
@@ -46,7 +47,7 @@ async def auto_key(order: types.Order):
 ```python
 @fp.router.on_confirmed_orders()
 async def confirmed(order: types.Order):
-    await order.answer('Спасибо за подтверждение! Буду рад отзыву')
+    await order.answer("Спасибо за подтверждение! Буду рад отзыву")
 ```
 
 ### `@fp.router.on_refunded_orders(mapping=None)`
@@ -56,7 +57,7 @@ async def confirmed(order: types.Order):
 ```python
 @fp.router.on_refunded_orders()
 async def refunded(order: types.Order):
-    print(f'Возврат: {order.order_id}')
+    print(f"Возврат: {order.order_id}")
 ```
 
 ---
@@ -94,7 +95,7 @@ async def refunded(order: types.Order):
 Полная информация о заказе со страницы `/orders/{id}/`.
 
 ```python
-order = await fp.account.order.get_order_details('ABC123')
+order = await fp.account.order.get_order_details("ABC123")
 print(order.status)
 print(order.description)
 ```
@@ -104,7 +105,7 @@ print(order.description)
 Возврат денег по заказу.
 
 ```python
-await fp.account.order.refund_order('ABC123')
+await fp.account.order.refund_order("ABC123")
 ```
 
 Возвращает `True` если возврат прошёл. При ошибке — `FpxRefundError`.
@@ -119,6 +120,6 @@ await fp.account.order.refund_order('ABC123')
 from fpx.services import OrderManager
 
 order_mgr = OrderManager(fp.account)
-details = await order_mgr.get_order_details('ABC123')
-await order_mgr.refund_order('ABC123')
+details = await order_mgr.get_order_details("ABC123")
+await order_mgr.refund_order("ABC123")
 ```

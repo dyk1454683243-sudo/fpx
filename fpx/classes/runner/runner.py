@@ -21,16 +21,16 @@ class Runner:
         self.router = Router()
         self.storage = None
         self._cache = {
-            'msgs': [],
-            'old_msgs': [],
-            'orders': [],
-            'old_orders': [],
-            'reviews': [],
-            'old_reviews': [],
-            'lot_categories': [],
-            'old_lot_categories': [],
-            'chip_categories': [],
-            'old_chip_categories': []
+            "msgs": [],
+            "old_msgs": [],
+            "orders": [],
+            "old_orders": [],
+            "reviews": [],
+            "old_reviews": [],
+            "lot_categories": [],
+            "old_lot_categories": [],
+            "chip_categories": [],
+            "old_chip_categories": [],
         }
         self._cache_is_updated = False
         self.is_running = True
@@ -44,10 +44,7 @@ class Runner:
             await asyncio.sleep(3600)
 
     async def _run_loop(
-        self,
-        timer,
-        watch_lots: list[str | int] | None = None,
-        watch_chips: list[str | int] | None = None
+        self, timer, watch_lots: list[str | int] | None = None, watch_chips: list[str | int] | None = None
     ):
         while self.is_running:
             try:
@@ -66,11 +63,11 @@ class Runner:
     async def start_polling(
         self,
         timer=3,
-        is_background: bool=True,
+        is_background: bool = True,
         watch_lots: list[str | int] | None = None,
-        watch_chips: list[str | int] | None = None
+        watch_chips: list[str | int] | None = None,
     ):
-        '''
+        """
         Запускает поиск новых событий.
 
         Args:
@@ -83,7 +80,7 @@ class Runner:
             watch_chips (list): Можно не передавать.
                 Список категорий чипсов(коротких лотов под валюты),
                 которые будет проверять скрипт.
-        '''
+        """
         if is_background:
             task = asyncio.create_task(self._run_loop(timer, watch_lots, watch_chips))
             return task
@@ -91,27 +88,30 @@ class Runner:
             await self._run_loop(timer, watch_lots, watch_chips)
 
     async def _warm_up(self, watch_lots, watch_chips):
-        '''Прогрев кеша'''
+        """Прогрев кеша"""
         await self._account.profile.get_user_data()
         tasks = []
         if watch_lots is not None:
             tasks.append(self._category._check_lot_categories(watch_lots))
         if watch_chips is not None:
             tasks.append(self._category._check_chip_categories(watch_chips))
-        tasks.extend([
-            self._chat._update_chat_cache(),
-            self._order._update_order_cache(),
-            self._review._update_review_cache()
-        ])
+        tasks.extend(
+            [self._chat._update_chat_cache(), self._order._update_order_cache(), self._review._update_review_cache()]
+        )
         results = await asyncio.gather(*tasks, return_exceptions=True)
         is_good = True
+        to_raise = None
         for result in results:
             if isinstance(result, Exception):
                 await self._handle_error(None, result)
+                if isinstance(result, (fpx_err.FpxRequestError, fpx_err.FpxAccountError)) and to_raise is None:
+                    to_raise = result
                 is_good = False
+        if to_raise:
+            raise to_raise
         if is_good:
             self._cache_is_updated = True
-            for handler in self.router._handlers['startup']:
+            for handler in self.router._handlers["startup"]:
                 try:
                     await handler()
                 except Exception as e:
@@ -120,7 +120,7 @@ class Runner:
             self._cache_is_updated = False
 
     async def _cache_runner(self, watch_lots, watch_chips):
-        '''Управляет кешем'''
+        """Управляет кешем"""
         if not self._cache_is_updated:
             await self._warm_up(watch_lots, watch_chips)
             return
@@ -129,22 +129,23 @@ class Runner:
             tasks.append(self._category._check_lot_categories(watch_lots))
         if watch_chips is not None:
             tasks.append(self._category._check_chip_categories(watch_chips))
-        tasks.extend([
-            self._chat._check_chats(),
-            self._order._check_orders(),
-            self._review._check_reviews()
-        ])
+        tasks.extend([self._chat._check_chats(), self._order._check_orders(), self._review._check_reviews()])
         results = await asyncio.gather(*tasks, return_exceptions=True)
+        to_raise = None
         for result in results:
             if isinstance(result, Exception):
                 await self._handle_error(None, result)
+                if isinstance(result, (fpx_err.FpxRequestError, fpx_err.FpxAccountError)) and to_raise is None:
+                    to_raise = result
+        if to_raise:
+            raise to_raise
 
     async def _handle_error(self, event: Any, exception: Exception):
-        '''Централизованная обработка любых ошибок.
+        """Централизованная обработка любых ошибок.
         event может быть Message, Order, Review или None.
         Советую проверять через if isinstanse(exception, fpx_err...)
-        '''
-        error_handlers = self.router._handlers.get('error', [])
+        """
+        error_handlers = self.router._handlers.get("error", [])
         for handler in error_handlers:
             if handler:
                 if asyncio.iscoroutinefunction(handler):
