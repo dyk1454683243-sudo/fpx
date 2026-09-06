@@ -4,7 +4,7 @@ from fpx import FunPayTools, types
 
 
 async def main():
-    fp = FunPayTools('YOUR_GOLDEN_KEY', 'YOUR_GOLDEN_SEAL')
+    fp = FunPayTools("YOUR_GOLDEN_KEY", "YOUR_GOLDEN_SEAL")
 
     @fp.router.on_new_review(stars=1)
     @fp.router.on_new_review(stars=2)
@@ -17,5 +17,6 @@ async def main():
     await fp.runner.start_polling(3, is_background=True)
     await fp.runner.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())

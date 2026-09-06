@@ -196,8 +196,10 @@
 ```python
 from fpx import Dependency, types
 
+
 def get_user(message):
-    return {'name': message.sender}
+    return {"name": message.sender}
+
 
 async def handler(message: types.Message, user: dict = Dependency(get_user)):
     print(user)

@@ -11,19 +11,21 @@
 ```python
 from fpx import types
 
+
 @fp.router.on_message()
 async def any_msg(message: types.Message):
-    print(f'{message.sender}: {message.text}')
-    await message.answer('Принято')
+    print(f"{message.sender}: {message.text}")
+    await message.answer("Принято")
 ```
 
 ### Команды
 
 ```python
 async def status_cmd(message: types.Message):
-    await message.answer('Бот работает')
+    await message.answer("Бот работает")
 
-fp.router.message_commands({'!status': status_cmd})
+
+fp.router.message_commands({"!status": status_cmd})
 ```
 
 ---
@@ -47,7 +49,7 @@ fp.router.message_commands({'!status': status_cmd})
 - `{text}` — текст сообщения
 
 ```python
-await message.answer('Привет, {sender}! Твой ID чата: {chat_id}')
+await message.answer("Привет, {sender}! Твой ID чата: {chat_id}")
 ```
 
 ---
@@ -63,7 +65,7 @@ await message.answer('Привет, {sender}! Твой ID чата: {chat_id}')
 ```python
 chats = await fp.account.chat.get_chats()
 for chat in chats:
-    print(f'{chat.username}: {chat.last_msg}')
+    print(f"{chat.username}: {chat.last_msg}")
 ```
 
 Возвращает `list[Chat]`, каждый объект содержит:
@@ -79,7 +81,7 @@ for chat in chats:
 Отправить сообщение в чат по его ID.
 
 ```python
-await fp.account.chat.send_message('12345678', 'Привет')
+await fp.account.chat.send_message("12345678", "Привет")
 ```
 
 ### `await fp.account.chat.send_image(chat_id, image_id)`
@@ -87,8 +89,8 @@ await fp.account.chat.send_message('12345678', 'Привет')
 Отправить изображение в чат по его ID.
 
 ```python
-image_id = await fp.account.upload_image('photo.jpg')
-await fp.account.chat.send_image('12345678', image_id)
+image_id = await fp.account.upload_image("photo.jpg")
+await fp.account.chat.send_image("12345678", image_id)
 ```
 
 **Аргументы:**
@@ -104,7 +106,7 @@ await fp.account.chat.send_image('12345678', image_id)
 Получает технические данные чата (csrf_token, node_name, последнее сообщение).
 
 ```python
-data = await fp.account.chat.get_chat_data('12345678')
+data = await fp.account.chat.get_chat_data("12345678")
 print(data.csrf_token)
 print(data.last_message.text)
 ```

@@ -13,15 +13,17 @@
 ```python
 from fpx import types
 
+
 @fp.router.on_new_review(stars=5)
 async def five_stars(review: types.CurReview):
-    await review.answer('Спасибо за отзыв!')
+    await review.answer("Спасибо за отзыв!")
+
 
 @fp.router.on_new_review(stars=1)
 @fp.router.on_new_review(stars=2)
 @fp.router.on_new_review(stars=3)
 async def bad_review(review: types.CurReview):
-    await review.message_author('Извини, давай решим проблему')
+    await review.message_author("Извини, давай решим проблему")
 ```
 
 ---
@@ -48,8 +50,8 @@ async def bad_review(review: types.CurReview):
 **`await review.message_author(message_text: str)`** — написать автору отзыва в чат заказа. Форматирование то же самое.
 
 ```python
-await review.answer('Спасибо, {author}!')
-await review.message_author('{author}, спасибо за {stars} звёзд!')
+await review.answer("Спасибо, {author}!")
+await review.message_author("{author}, спасибо за {stars} звёзд!")
 ```
 
 ---
@@ -61,7 +63,7 @@ await review.message_author('{author}, спасибо за {stars} звёзд!')
 Получить отзыв к конкретному заказу.
 
 ```python
-review = await fp.account.review.get_review('ABC123')
+review = await fp.account.review.get_review("ABC123")
 print(review.text)
 print(review.stars)
 print(review.answer)  # твой ответ (если есть)
@@ -74,7 +76,7 @@ print(review.answer)  # твой ответ (если есть)
 Ответить на отзыв вручную.
 
 ```python
-await fp.account.review.review_answer('ABC123', 'Спасибо!')
+await fp.account.review.review_answer("ABC123", "Спасибо!")
 ```
 
 Возвращает `True` при успехе.
@@ -87,5 +89,5 @@ await fp.account.review.review_answer('ABC123', 'Спасибо!')
 from fpx.services import ReviewManager
 
 review_mgr = ReviewManager(fp.account)
-review = await review_mgr.get_review('ABC123')
+review = await review_mgr.get_review("ABC123")
 ```

@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -19,16 +18,19 @@ from fpx.middlewares._request_engine import RequestEngine
 
 @dataclass
 class AccountData:
-    '''Хранит данные аккаунта'''
+    """Хранит данные аккаунта"""
+
     username: Optional[str] = None
     user_id: Optional[str] = None
     _csrf_token: Optional[str] = None
     _node_names: dict = field(default_factory=dict)
 
+
 class Account:
-    '''
+    """
     Взаимодействует с аккаунтом.
-    '''
+    """
+
     def __init__(self, client):
         self._http_client = client
         self._client = FunPayClient(self, self._http_client)
@@ -45,7 +47,7 @@ class Account:
         self.category = CategoryManager(self)
 
     async def upload_image(self, file_path):
-        '''
+        """
         Загрузка изображения на FunPay.
         Args:
             file_path (str): Путь до файла изображения.
@@ -54,9 +56,9 @@ class Account:
 
         Raises:
             FpxRequestError: Ошибка загрузки.
-        '''
-        async with aiofiles.open(file_path, mode='rb') as f:
+        """
+        async with aiofiles.open(file_path, mode="rb") as f:
             image_data = await f.read()
 
         result = await self._client.upload_image(image_data)
-        return result['fileId']
+        return result["fileId"]

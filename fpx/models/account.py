@@ -9,9 +9,10 @@ from fpx.utils import errors as fpx_err
 
 @dataclass
 class Balance:
-    rub: float=0.0
-    usd: float=0.0
-    eur: float=0.0
+    rub: float = 0.0
+    usd: float = 0.0
+    eur: float = 0.0
+
 
 @dataclass
 class Calc:
@@ -19,6 +20,7 @@ class Calc:
     price: str
     unit: str
     pos: str
+
 
 @dataclass
 class CurReview:
@@ -30,34 +32,35 @@ class CurReview:
     _client: Any = field(init=False, repr=False, default=None)
 
     async def answer(self, answer_text: str) -> bool:
-        '''Ответить на отзыв'''
+        """Ответить на отзыв"""
         if not self._client:
-            raise fpx_err.FpxClientNotAttachedError('Объект CurReview не привязан к клиенту fpx')
+            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
         if not self.order:
-            raise fpx_err.FpxAttributeError('В объект не передан аттрибут Order')
+            raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")
         formatted_reply = answer_text.format(
             author=self.author,
             order_id=self.order_id,
             order_name=self.order.name,
             order_time=self.order.order_time,
-            stars=self.stars
+            stars=self.stars,
         )
         return await self._client._account.review.review_answer(self.order_id, formatted_reply)
 
     async def message_author(self, message_text: str) -> bool:
-        '''Ответить на отзыв в чате'''
+        """Ответить на отзыв в чате"""
         if not self._client:
-            raise fpx_err.FpxClientNotAttachedError('Объект CurReview не привязан к клиенту fpx')
+            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
         if not self.order:
-            raise fpx_err.FpxAttributeError('В объект не передан аттрибут Order')
+            raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")
         formatted_reply = message_text.format(
             author=self.author,
             order_id=self.order_id,
             order_name=self.order.name,
             order_time=self.order.order_time,
-            stars=self.stars
+            stars=self.stars,
         )
         return await self._client._account.chat.send_message(self.order.chat_id, formatted_reply)
+
 
 @dataclass
 class Profile:
@@ -65,10 +68,12 @@ class Profile:
     lots: list[LotInfo] = field(default_factory=list)
     reviews: list[CurReview] = field(default_factory=list)
 
+
 @dataclass
 class UserData:
     csrf_token: str
     user_id: str
+
 
 @dataclass
 class Order:
@@ -88,22 +93,20 @@ class Order:
     _client: Any = field(init=False, repr=False, default=None)
 
     async def answer(self, answer_text: str) -> bool:
-        '''Ответить в этот же чат'''
+        """Ответить в этот же чат"""
         if not self._client:
-            raise fpx_err.FpxClientNotAttachedError('Объект Order не привязан к клиенту fpx')
+            raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")
         formatted_reply = answer_text.format(
-                            order_id=self.order_id,
-                            order_time=self.order_time,
-                            client_name=self.client_name,
-                            order_name=self.name
-                        )
+            order_id=self.order_id, order_time=self.order_time, client_name=self.client_name, order_name=self.name
+        )
         return await self._client._account.chat.send_message(self.chat_id, formatted_reply)
 
     async def refund(self) -> bool:
-        '''Вернуть заказ'''
+        """Вернуть заказ"""
         if not self._client:
-            raise fpx_err.FpxClientNotAttachedError('Объект Order не привязан к клиенту fpx')
+            raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")
         return await self._client._account.order.refund_order(self.order_id)
+
 
 @dataclass
 class Review:
@@ -111,15 +114,18 @@ class Review:
     stars: int
     answer: str
 
+
 @dataclass
 class GameTitle:
     id: int
     name: str
 
+
 @dataclass
 class GameSubCategory:
     id: int
     sub_name: str
+
 
 @dataclass
 class Game:

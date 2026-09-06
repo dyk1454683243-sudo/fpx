@@ -1,44 +1,33 @@
-import httpx
 import re
+
+import httpx
 
 from fpx.classes.account.account import Account
 from fpx.classes.runner.runner import Runner
 from fpx.fsm import BaseStorage, MemoryStorage
 from fpx.utils.errors import FpxAuthError
 
-
 GKEY_PATTERN = re.compile(r"^[a-z0-9]{32}$")
 GSEAL_PATTERN = re.compile(r"^v1\.[a-f0-9]{64}\.[a-f0-9]{32}\.\d+\.k\d+\.[a-f0-9]{64}$")
 
+
 class FunPayTools:
-    def __init__(
-            self, 
-            gkey: str,
-            gseal: str, 
-            storage: BaseStorage | None = None, 
-            proxy = None, 
-            http_client = None
-        ):
+    def __init__(self, gkey: str, gseal: str, storage: BaseStorage | None = None, proxy=None, http_client=None):
         if not gkey or not gseal:
             raise FpxAuthError("gkey и gseal не могут быть None.")
         if not GKEY_PATTERN.match(gkey):
             raise FpxAuthError("Неверный формат gkey, перепроверь его.")
         if not GSEAL_PATTERN.match(gseal):
-            raise FpxAuthError('Неверный формат gseal, перепроверь его.')
-        self._cookies = {
-            'golden_key': gkey,
-            'golden_seal': gseal,
-            'locale': 'ru'
-        }
+            raise FpxAuthError("Неверный формат gseal, перепроверь его.")
+        self._cookies = {"golden_key": gkey, "golden_seal": gseal, "locale": "ru"}
         self._headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
-            "Accept-Language": "ru-RU,ru;q=0.9"
+            "Accept-Language": "ru-RU,ru;q=0.9",
         }
         mounts = {}
         if http_client and proxy:
             raise ValueError(
-                'Нельзя передавать proxy и http_client вместе.'
-                'В этом нет смысла, передавайте прокси внутри клиента'
+                "Нельзя передавать proxy и http_client вместе.В этом нет смысла, передавайте прокси внутри клиента"
             )
         if proxy:
             mounts = {
@@ -54,11 +43,11 @@ class FunPayTools:
                 http2=True,
                 cookies=self._cookies,
                 headers=self._headers,
-                base_url='https://funpay.com',
+                base_url="https://funpay.com",
                 follow_redirects=True,
                 limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
                 timeout=httpx.Timeout(15.0),
-                mounts=mounts
+                mounts=mounts,
             )
         self.account = Account(self._client)
         self.runner = Runner(self.account)
@@ -74,7 +63,7 @@ class FunPayTools:
         await self.shutdown()
 
     async def shutdown(self):
-        if hasattr(self, 'runner') and self.runner.is_running:
+        if hasattr(self, "runner") and self.runner.is_running:
             self.runner.is_running = False
         if self._client and not self._client.is_closed:
             await self._client.aclose()

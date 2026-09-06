@@ -13,18 +13,18 @@ class RequestEngine:
 
     async def execute(self, method: str, url: str, **kwargs):
         attempts = 3
-        backoff = 1.5 # множитель времени ожидания
-        if method.upper() in ('POST', 'PUT', 'DELETE'):
-            if 'data' not in kwargs:
-                kwargs['data'] = {}
-            if 'headers' not in kwargs:
-                kwargs['headers'] = {}
+        backoff = 1.5  # множитель времени ожидания
+        if method.upper() in ("POST", "PUT", "DELETE"):
+            if "data" not in kwargs:
+                kwargs["data"] = {}
+            if "headers" not in kwargs:
+                kwargs["headers"] = {}
             if self._account.data._csrf_token is None:
                 await self._account.profile.get_user_data()
-            if 'csrf_token' not in kwargs['data']:
-                kwargs['data']['csrf_token'] = self._account.data._csrf_token
-            if 'X-Cp-Csrf-Token' not in kwargs['headers']:
-                kwargs['headers']['X-Cp-Csrf-Token'] = self._account.data._csrf_token
+            if "csrf_token" not in kwargs["data"]:
+                kwargs["data"]["csrf_token"] = self._account.data._csrf_token
+            if "X-Cp-Csrf-Token" not in kwargs["headers"]:
+                kwargs["headers"]["X-Cp-Csrf-Token"] = self._account.data._csrf_token
         for attempt in range(attempts):
             try:
                 response = await self._client.request(method, url, **kwargs)
@@ -33,11 +33,11 @@ class RequestEngine:
                     if attempt == attempts - 1:
                         raise fpx_err.FpxRequestError(message=f"Превышено кол-во попыток запроса (Flood/429) к {url}")
                     try:
-                        sleep_time = int(response.headers.get('Retry-After', 5))
+                        sleep_time = int(response.headers.get("Retry-After", 5))
                     except (ValueError, TypeError):
                         sleep_time = 5
                     if self.runner:
-                        for handler in self.runner.router._handlers['flood']:
+                        for handler in self.runner.router._handlers["flood"]:
                             asyncio.create_task(handler(sleep_time))
                     await asyncio.sleep(sleep_time)
                     continue
@@ -48,17 +48,16 @@ class RequestEngine:
                     continue
                 return response
             except httpx.ReadTimeout as e:
-                if method.upper() == 'GET':
+                if method.upper() == "GET":
                     if attempt == attempts - 1:
                         raise e
-                    await asyncio.sleep(backoff ** attempt)
+                    await asyncio.sleep(backoff**attempt)
                 else:
                     raise fpx_err.FpxRequestError(
-                        message=f'POST запрос упал по таймауту ответа'
-                        f'Возможно действие выполнилось: {e}'
+                        message=f"POST запрос упал по таймауту ответаВозможно действие выполнилось: {e}"
                     )
             except (httpx.ConnectTimeout, httpx.ConnectError) as e:
                 if attempt == attempts - 1:
                     raise e
-                await asyncio.sleep(backoff ** attempt)
+                await asyncio.sleep(backoff**attempt)
         raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")

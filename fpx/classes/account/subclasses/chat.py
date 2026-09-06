@@ -23,13 +23,13 @@ class ChatManager:
             FpxGetChatsError: Ошибка получения чатов FunPay
 
         """
-        step = 'запрос страницы чатов с FunPay'
+        step = "запрос страницы чатов с FunPay"
         try:
             html = await self._account._client.get_chats_page()
-            step = 'парсинг данных чатов'
+            step = "парсинг данных чатов"
             chats = self._account._parser.parse_chats_list(html)
         except Exception as e:
-            raise fpx_err.FpxGetChatsError(f'Не удалось выполнить {step}. Ошибка: {e}')
+            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}")
         return chats
 
     async def send_message(self, chat_id: str, text: str, with_nodes: bool = False):
@@ -48,25 +48,25 @@ class ChatManager:
             FpxMessageNotDelivered: Если не удалось отправить сообщение.
 
         """
-        step = f'запрос данных чата ID {chat_id}'
+        step = f"запрос данных чата ID {chat_id}"
         try:
             if chat_id not in self._account.data._node_names or not self._account.data._csrf_token:
                 await self.get_chat_data(chat_id)
-            step = f'POST запрос на отправку сообщения {text} в чат ID {chat_id}'
+            step = f"POST запрос на отправку сообщения {text} в чат ID {chat_id}"
             response = await self._account._client.send_message_request(
                 self._account.data._node_names[chat_id], -1, text
             )
         except Exception as e:
-            raise fpx_err.FpxMessageDeliverError(f'Не удалось выполнить {step}. Ошибка: {e}')
-        if response.get('error') is None:
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
+        if response.get("error") is None:
             return response
         else:
-            error_code = response.get('error', '400')
-            error_msg = response.get('msg', 'Неизвестная ошибка')
-            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_code} - {error_msg}')
+            error_code = response.get("error", "400")
+            error_msg = response.get("msg", "Неизвестная ошибка")
+            raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")
 
     async def get_chat_data(self, chat_id: int | str, last_message_node_id: int | str | None = None):
-        '''
+        """
         Получает данные чата.
 
         Args:
@@ -84,25 +84,25 @@ class ChatManager:
                     - text (str): Текст сообщения
         Raises:
             FpxGetChatDataError: Ошибка запроса данных чата
-        '''
+        """
         try:
-            stage = 'запроса данных FunPay'
+            stage = "запроса данных FunPay"
             html = await self._account._client.get_current_chat(chat_id)
-            stage = 'парсинга данных'
+            stage = "парсинга данных"
             data = self._account._parser.parse_chat(html)
         except Exception as e:
-            raise fpx_err.FpxGetChatDataError(f'При выполнении {stage} произошла ошибка: {e}')
+            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}")
         good_msg_list = []
-        if data.get('messages'):
+        if data.get("messages"):
             message_list = []
-            for msg in data.get('messages'):
+            for msg in data.get("messages"):
                 message_list.append(
                     Message(
-                        node_msg_id=msg.get('node_id'),
-                        sender=msg.get('sender'),
-                        text=msg.get('message'),
-                        is_system=msg.get('is_system'),
-                        chat_id=chat_id
+                        node_msg_id=msg.get("node_id"),
+                        sender=msg.get("sender"),
+                        text=msg.get("message"),
+                        is_system=msg.get("is_system"),
+                        chat_id=chat_id,
                     )
                 )
             if not last_message_node_id:
@@ -114,10 +114,10 @@ class ChatManager:
         else:
             good_msg_list = []
         chat = ChatData(
-            node_name=data['data-name'],
-            csrf_token=data['csrf-token'],
-            user_id=data['user-id'],
-            last_messages=good_msg_list
+            node_name=data["data-name"],
+            csrf_token=data["csrf-token"],
+            user_id=data["user-id"],
+            last_messages=good_msg_list,
         )
         self._account.data._node_names[chat_id] = chat.node_name
         self._account.data._csrf_token = chat.csrf_token
@@ -125,7 +125,7 @@ class ChatManager:
         return chat
 
     async def send_image(self, chat_id, image_id):
-        '''
+        """
         Отправка изображения в чат
         Args:
             chat_id (str): ID чата
@@ -138,20 +138,20 @@ class ChatManager:
                 при ошибке пункт Raises
         Raises:
             FpxMessageNotDelivered: Если не удалось отправить сообщение.
-        '''
-        step = f'запрос данных чата ID {chat_id}'
+        """
+        step = f"запрос данных чата ID {chat_id}"
         try:
             if chat_id not in self._account.data._node_names or not self._account.data._csrf_token:
                 await self.get_chat_data(chat_id)
-            step = f'POST запрос на отправку изображения {image_id} в чат ID {chat_id}'
+            step = f"POST запрос на отправку изображения {image_id} в чат ID {chat_id}"
             response = await self._account._client.send_image_request(
                 self._account.data._node_names[chat_id], -1, image_id
             )
         except Exception as e:
-            raise fpx_err.FpxMessageDeliverError(f'Не удалось выполнить {step}. Ошибка: {e}')
-        if response.get('error') is None:
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
+        if response.get("error") is None:
             return response
         else:
-            error_code = response.get('error', '400')
-            error_msg = response.get('msg', 'Неизвестная ошибка')
-            raise fpx_err.FpxMessageDeliverError(f'Сервер вернул ошибку: {error_code} - {error_msg}')
+            error_code = response.get("error", "400")
+            error_msg = response.get("msg", "Неизвестная ошибка")
+            raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")

@@ -6,46 +6,47 @@ from fpx.models.account import Order
 
 logger = logging.getLogger("fpx.order_runner")
 
+
 class OrderRunner:
     def __init__(self, runner):
         self.runner = runner
 
     async def _update_order_cache(self):
-        '''
+        """
         Обновляет кеш заказов в раннере
-        '''
+        """
         orders = await self.runner._account.profile.get_my_sells(100)
         result = []
         for order in orders:
             o = {
-                'order_id': order.order_id,
-                'order_time': order.order_time,
-                'client_name': order.client_name,
-                'price': order.price,
-                'name': order.name,
-                'status': order.status
+                "order_id": order.order_id,
+                "order_time": order.order_time,
+                "client_name": order.client_name,
+                "price": order.price,
+                "name": order.name,
+                "status": order.status,
             }
             result.append(o)
-        self.runner._cache['old_orders'] = self.runner._cache['orders']
-        self.runner._cache['orders'] = result
+        self.runner._cache["old_orders"] = self.runner._cache["orders"]
+        self.runner._cache["orders"] = result
 
     def _compare_order_cache(self):
-        '''
+        """
         Сравнивает старый и новый кеш заказов
-        '''
+        """
         result = []
-        if self.runner._cache['orders'] != self.runner._cache['old_orders']:
-            for order in self.runner._cache['orders']:
-                if order not in self.runner._cache['old_orders']:
+        if self.runner._cache["orders"] != self.runner._cache["old_orders"]:
+            for order in self.runner._cache["orders"]:
+                if order not in self.runner._cache["old_orders"]:
                     result.append(Order(**order))
         return result
 
     async def _check_handler(self, handler, order, state_ctx):
-        h_func = handler['function']
-        if handler.get('mapping') is not None:
+        h_func = handler["function"]
+        if handler.get("mapping") is not None:
             msg_text = order.description.lower()
             matched = False
-            for trigger in handler['mapping']:
+            for trigger in handler["mapping"]:
                 if trigger.lower() in msg_text:
                     order.finded_mapping = trigger
                     matched = True
@@ -58,8 +59,8 @@ class OrderRunner:
     async def _check_trigger_for_command(self, order: Order, state_ctx: FSMContext | None):
         if order.description is None:
             return False
-        for cmd_handler in self.runner.router._handlers['order_command']:
-            target_command = cmd_handler['trigger_command']
+        for cmd_handler in self.runner.router._handlers["order_command"]:
+            target_command = cmd_handler["trigger_command"]
             target_command_lower = {k.lower(): v for k, v in target_command.items()}
             target_function = None
             for command_name in target_command_lower:
@@ -76,21 +77,21 @@ class OrderRunner:
     async def _trigger_order_handlers(self, order: Order):
         state_ctx = FSMContext(self.runner.storage, order.chat_id) if order.chat_id else None
         status = order.status.lower() if order.status else order.status
-        for handler in self.runner.router._handlers['order']:
+        for handler in self.runner.router._handlers["order"]:
             if await self._check_handler(handler, order, state_ctx):
                 pass
-        if status in ('закрыт', 'closed', 'закрито'):
-            for handler in self.runner.router._handlers['confirmed_order']:
+        if status in ("закрыт", "closed", "закрито"):
+            for handler in self.runner.router._handlers["confirmed_order"]:
                 if await self._check_handler(handler, order, state_ctx):
                     pass
-        elif status in ('оплачен', 'оплачено', 'paid', 'відкрито'):
-            for handler in self.runner.router._handlers['new_order']:
+        elif status in ("оплачен", "оплачено", "paid", "відкрито"):
+            for handler in self.runner.router._handlers["new_order"]:
                 if await self._check_handler(handler, order, state_ctx):
                     pass
             if await self._check_trigger_for_command(order, state_ctx):
                 pass
-        elif status in ('возврат', 'повернення', 'refund'):
-            for handler in self.runner.router._handlers['refund']:
+        elif status in ("возврат", "повернення", "refund"):
+            for handler in self.runner.router._handlers["refund"]:
                 if await self._check_handler(handler, order, state_ctx):
                     pass
 
@@ -102,7 +103,7 @@ class OrderRunner:
             order._client = self.runner
             await self._trigger_order_handlers(order)
         except Exception as e:
-            logger.debug(f'В процессе обработки заказа произошла ошибка: {e}. Убедитесь что всё хорошо', exc_info=True)
+            logger.debug(f"В процессе обработки заказа произошла ошибка: {e}. Убедитесь что всё хорошо", exc_info=True)
             await self.runner._handle_error(event=order, exception=e)
 
     async def _check_orders(self):

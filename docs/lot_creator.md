@@ -71,15 +71,15 @@ result = await fp.account.lot.create_lot(lot)
 Некоторые поля имеют `options` - список `FieldOptions` с ключом и значением. Например, для категории с услугами:
 
 ```python
-lot.set_field('fields[platform]', 'PC')
+lot.set_field("fields[platform]", "PC")
 ```
 
 Какие именно поля есть — зависит от категории. Используйте `get_field_options(key)` чтобы посмотреть доступные варианты.
 
 ```python
-platform_options = lot.get_field_options('fields[platform]')
+platform_options = lot.get_field_options("fields[platform]")
 for opt in platform_options:
-    print(f'{opt.key} → {opt.value}')
+    print(f"{opt.key} → {opt.value}")
 ```
 
 > В разных категориях набор полей и options разный. Пример с `fields[platform]` приведён для демонстрации, он может не подходить для вашей категории.
@@ -98,26 +98,28 @@ for opt in platform_options:
 import asyncio
 from fpx import FunPayTools
 
+
 async def main():
-    fp = FunPayTools('golden_key', 'golden_seal')
+    fp = FunPayTools("golden_key", "golden_seal")
 
     lot = await fp.account.lot.get_node_editor_data(2794)
 
     # обязательные поля
-    lot.short_desc_ru = 'Классный аккаунт'
-    lot.short_desc_en = 'Cool account'
-    lot.price = '500'
-    lot.amount = '1'
+    lot.short_desc_ru = "Классный аккаунт"
+    lot.short_desc_en = "Cool account"
+    lot.price = "500"
+    lot.amount = "1"
 
     # опционально
-    lot.desc_ru = 'Полное описание на русском'
-    lot.desc_en = 'Full description in English'
+    lot.desc_ru = "Полное описание на русском"
+    lot.desc_en = "Full description in English"
 
     # если есть поле с выбором - ставим нужное значение
     # lot.set_field('fields[platform]', 'PC')
 
     await fp.account.lot.create_lot(lot)
-    print('Лот создан')
+    print("Лот создан")
+
 
 asyncio.run(main())
 ```
@@ -129,7 +131,7 @@ asyncio.run(main())
 Метод `lot.images` принимает **список строк** — ID изображений, которые уже загружены на FunPay. ID можно получить через `fp.account.upload_image(...)`.
 
 ```python
-lot.images = ['123456', '789012']
+lot.images = ["123456", "789012"]
 ```
 
 ---
@@ -137,7 +139,7 @@ lot.images = ['123456', '789012']
 ## Как задавать секреты
 
 ```python
-lot.secrets = ['secret1', 'secret2']          # сохраняется как многострочная строка
+lot.secrets = ["secret1", "secret2"]  # сохраняется как многострочная строка
 ```
 
 ---

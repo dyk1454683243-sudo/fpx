@@ -13,9 +13,10 @@
 ```python
 from fpx import types
 
+
 @fp.router.on_lot_category()
 async def lot_changed(lot: types.CategoryLastLot):
-    print(f'Конкурент {lot.owner_username} перебил цену до {lot.price}')
+    print(f"Конкурент {lot.owner_username} перебил цену до {lot.price}")
 ```
 
 ### `@fp.router.on_chip_category()`
@@ -25,7 +26,7 @@ async def lot_changed(lot: types.CategoryLastLot):
 ```python
 @fp.router.on_chip_category()
 async def chip_changed(lot: types.CategoryLastLot):
-    print(f'Чипсы: {lot.offer_id} = {lot.price}')
+    print(f"Чипсы: {lot.offer_id} = {lot.price}")
 ```
 
 ---
@@ -38,8 +39,8 @@ async def chip_changed(lot: types.CategoryLastLot):
 await fp.runner.start_polling(
     3,
     is_background=True,
-    watch_lots=[1316, 99],    # ID категорий лотов
-    watch_chips=[55]          # ID категорий чипсов
+    watch_lots=[1316, 99],  # ID категорий лотов
+    watch_chips=[55],  # ID категорий чипсов
 )
 ```
 
@@ -66,7 +67,7 @@ await fp.runner.start_polling(
 ```python
 lots = await fp.account.category.get_lot_category_last_lot(1316)
 for lot in lots:
-    print(f'{lot.filtration}: {lot.price} у {lot.owner_username}')
+    print(f"{lot.filtration}: {lot.price} у {lot.owner_username}")
 ```
 
 Возвращает `list[CategoryLastLot]`.
@@ -94,9 +95,9 @@ lots = await fp.account.category.get_chip_category_last_lot(55)
 games = await fp.account.category.get_all_categories()
 
 for game in games:
-    print(f'{game.title.name} (id={game.title.id})')
+    print(f"{game.title.name} (id={game.title.id})")
     for sub in game.subcategories:
-        print(f'  └ {sub.sub_name} (id={sub.id})')
+        print(f"  └ {sub.sub_name} (id={sub.id})")
 ```
 
 **Возвращает:** `list[Game]`  
@@ -108,7 +109,7 @@ for game in games:
 `target: str` - слово или фраза для поиска. Допускает погрешности (нечёткий поиск на стороне фп).
 
 ```python
-results = await fp.account.category.find_category('minecraft')
+results = await fp.account.category.find_category("minecraft")
 for game in results:
     print(game.title.name, [s.sub_name for s in game.subcategories])
 ```
@@ -146,16 +147,16 @@ games = await fp.account.category.get_all_categories()
 
 # Достаём первую игру
 first = games[0]
-print(first.title.name)                    # "Minecraft"
-print(first.title.id)                      # 42
-print(first.subcategories[0].sub_name)     # "Аккаунты"
-print(first.subcategories[0].id)           # 1316
+print(first.title.name)  # "Minecraft"
+print(first.title.id)  # 42
+print(first.subcategories[0].sub_name)  # "Аккаунты"
+print(first.subcategories[0].id)  # 1316
 
 # Обходим всё
 for game in games:
-    print(f'\n{game.title.name}:')
+    print(f"\n{game.title.name}:")
     for sub in game.subcategories:
-        print(f'  [{sub.id}] {sub.sub_name}')
+        print(f"  [{sub.id}] {sub.sub_name}")
 ```
 
 ---

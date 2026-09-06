@@ -17,27 +17,31 @@
 from fpx import FunPayTools, types
 from fpx.fsm import FSMContext
 
-fp = FunPayTools('golden_key', 'golden_seal')
+fp = FunPayTools("golden_key", "golden_seal")
 
-@fp.router.on_message(text='!start')
+
+@fp.router.on_message(text="!start")
 async def start_dialog(message: types.Message, state: FSMContext):
-    await message.answer('Привет, введи свой ник')
-    await state.set_state('waiting_nickname')
+    await message.answer("Привет, введи свой ник")
+    await state.set_state("waiting_nickname")
 
-@fp.router.on_message(state='waiting_nickname')
+
+@fp.router.on_message(state="waiting_nickname")
 async def get_nickname(message: types.Message, state: FSMContext):
     nick = message.text
     await state.update_data(nick=nick)
-    await message.answer('Теперь введи пароль')
-    await state.set_state('waiting_pass')
+    await message.answer("Теперь введи пароль")
+    await state.set_state("waiting_pass")
 
-@fp.router.on_message(state='waiting_pass')
+
+@fp.router.on_message(state="waiting_pass")
 async def get_pass(message: types.Message, state: FSMContext):
     await state.update_data(password=message.text)
-    await message.answer('Вы уверены? Да/Нет')
-    await state.set_state('waiting_confirm')
+    await message.answer("Вы уверены? Да/Нет")
+    await state.set_state("waiting_confirm")
 
-@fp.router.on_message(state='waiting_confirm')
+
+@fp.router.on_message(state="waiting_confirm")
 async def get_confirm(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await message.answer(f"Принято! Ник: {data.get('nick')}, пароль: {data.get('password')}")
@@ -65,7 +69,7 @@ async def get_confirm(message: types.Message, state: FSMContext):
 ```python
 from fpx import FunPayTools
 
-fp = FunPayTools('golden_key', 'golden_seal')  # MemoryStorage используется автоматически
+fp = FunPayTools("golden_key", "golden_seal")  # MemoryStorage используется автоматически
 ```
 
 Данные хранятся в памяти процесса. **Сбрасываются при перезапуске.**
@@ -78,7 +82,7 @@ fp = FunPayTools('golden_key', 'golden_seal')  # MemoryStorage использу�
 from fpx import FunPayTools
 from fpx.fsm import FileStorage
 
-fp = FunPayTools('golden_key', 'golden_seal', storage=FileStorage('states.json'))
+fp = FunPayTools("golden_key", "golden_seal", storage=FileStorage("states.json"))
 ```
 
 Состояния сохраняются в JSON файл который вы укажете в аргументах и **переживают перезапуск**.
@@ -102,11 +106,11 @@ from fpx import FunPayTools
 from fpx.fsm import RedisStorage
 
 storage = RedisStorage(
-    url='redis://localhost:6379',  # по умолчанию
-    prefix='fpx'                  # префикс ключей в Redis, по умолчанию 'fpx'
+    url="redis://localhost:6379",  # по умолчанию
+    prefix="fpx",  # префикс ключей в Redis, по умолчанию 'fpx'
 )
 
-fp = FunPayTools('golden_key', 'golden_seal', storage=storage)
+fp = FunPayTools("golden_key", "golden_seal", storage=storage)
 ```
 
 Ключи хранятся в формате `{prefix}:fsm:{chat_id}`, например `fpx:fsm:12345`.
@@ -121,6 +125,7 @@ fp = FunPayTools('golden_key', 'golden_seal', storage=storage)
 
 ```python
 from fpx.fsm import BaseStorage
+
 
 class MyStorage(BaseStorage):
     async def set_state(self, chat_id: str | int, state: str | None) -> None:
@@ -159,10 +164,12 @@ class MyStorage(BaseStorage):
 ```python
 from fpx import Dependency, types
 
-async def get_cur_user(message: types.Message):
-    return {'id': message.sender, 'vip': True}
 
-@fp.router.on_message(state='waiting_nickname')
+async def get_cur_user(message: types.Message):
+    return {"id": message.sender, "vip": True}
+
+
+@fp.router.on_message(state="waiting_nickname")
 async def handler(message: types.Message, user: dict = Dependency(get_cur_user)):
     print(user)
 ```

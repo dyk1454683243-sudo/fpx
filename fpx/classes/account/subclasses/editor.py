@@ -7,13 +7,7 @@ class FunPayEditor:
     def __init__(self, account):
         self._account = account
 
-    async def _changing_lot_base(
-        self,
-        lot_id,
-        lot,
-        fining_fields: str | None,
-        new_fields: str | int | None
-        ):
+    async def _changing_lot_base(self, lot_id, lot, fining_fields: str | None, new_fields: str | int | None):
         response = await self._account._client.edit_lot(lot, active=True)
         if response.status_code == 200:
             await asyncio.sleep(0.5)
@@ -28,13 +22,8 @@ class FunPayEditor:
             raise fpx_err.FpxLotEditingError("Данные лота на сайте остались старыми")
         raise fpx_err.FpxRequestError(f"Ошибка изменения лота. Статус: {response.status_code}")
 
-    async def change_lot_short_desc(
-        self,
-        lot_id: int | str,
-        short_desc_ru: str,
-        short_desc_en: str
-        ):
-        '''
+    async def change_lot_short_desc(self, lot_id: int | str, short_desc_ru: str, short_desc_en: str):
+        """
         Изменить краткое описание (название) лота.
 
         Args:
@@ -46,16 +35,14 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Название не изменилось
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
-        lot.fields['fields[summary][ru]'] = short_desc_ru
-        lot.fields['fields[summary][en]'] = short_desc_en
-        return await self._changing_lot_base(lot_id, lot, 'fields[summary][ru]', short_desc_ru)
+        lot.fields["fields[summary][ru]"] = short_desc_ru
+        lot.fields["fields[summary][en]"] = short_desc_en
+        return await self._changing_lot_base(lot_id, lot, "fields[summary][ru]", short_desc_ru)
 
-    async def delete_lot(
-        self, lot_id: str | int
-        ):
-        '''
+    async def delete_lot(self, lot_id: str | int):
+        """
         Удаляет лот.
 
         Args:
@@ -66,18 +53,13 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Лот не удалился
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
         lot.deleted = 1
         return await self._changing_lot_base(lot_id, lot, None, None)
 
-    async def change_lot_desc(
-        self,
-        lot_id: str | int,
-        description_ru: str,
-        description_en: str
-        ):
-        '''
+    async def change_lot_desc(self, lot_id: str | int, description_ru: str, description_en: str):
+        """
         Изменить подробное описание лота.
 
         Args:
@@ -89,14 +71,14 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Описание не изменилось
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
-        lot.fields['fields[desc][ru]'] = description_ru
-        lot.fields['fields[desc][en]'] = description_en
-        return await self._changing_lot_base(lot_id, lot, 'fields[desc][ru]', description_ru)
+        lot.fields["fields[desc][ru]"] = description_ru
+        lot.fields["fields[desc][en]"] = description_en
+        return await self._changing_lot_base(lot_id, lot, "fields[desc][ru]", description_ru)
 
     async def change_lot_amount(self, lot_id: int | str, new_amount: int | str):
-        '''
+        """
         Меняет количество доступного товара в лоте
 
         Args:
@@ -107,18 +89,13 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Наличие не изменилось
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
-        lot.fields['amount'] = new_amount
-        return await self._changing_lot_base(lot_id, lot, 'amount', new_amount)
+        lot.fields["amount"] = new_amount
+        return await self._changing_lot_base(lot_id, lot, "amount", new_amount)
 
-    async def change_payment_msg(
-        self,
-        lot_id: int | str,
-        payment_msg_ru: str,
-        payment_msg_en: str
-        ):
-        '''
+    async def change_payment_msg(self, lot_id: int | str, payment_msg_ru: str, payment_msg_en: str):
+        """
         Меняет сообщение после оплаты лота.
 
         Args:
@@ -130,14 +107,14 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Не удалось поменять лот
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
-        lot.fields['fields[payment_msg][ru]'] = payment_msg_ru
-        lot.fields['fields[payment_msg][en]'] = payment_msg_en
-        return await self._changing_lot_base(lot_id, lot, 'fields[payment_msg][ru]', payment_msg_ru)
+        lot.fields["fields[payment_msg][ru]"] = payment_msg_ru
+        lot.fields["fields[payment_msg][en]"] = payment_msg_en
+        return await self._changing_lot_base(lot_id, lot, "fields[payment_msg][ru]", payment_msg_ru)
 
     async def set_lot_secrets(self, lot_id: int | str, secrets: list[str], rewrite: bool = False):
-        '''
+        """
         Обновить/Перезаписать данные автовыдачи лота.
         Посмотреть текущие данные можно FunPayTools.account.lot.get_lot_secrets().
 
@@ -151,19 +128,19 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Секреты не изменились
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
-        lot.fields['auto_delivery'] = 'on'
-        secret_str = '\n'.join(secrets)
+        lot.fields["auto_delivery"] = "on"
+        secret_str = "\n".join(secrets)
         if rewrite:
-            lot.fields['secrets'] = secret_str
+            lot.fields["secrets"] = secret_str
         else:
-            secret_str = lot.fields.get('secrets', '') + '\n' + secret_str
-            lot.fields['secrets'] = secret_str
-        return await self._changing_lot_base(lot_id, lot, 'secrets', secret_str)
+            secret_str = lot.fields.get("secrets", "") + "\n" + secret_str
+            lot.fields["secrets"] = secret_str
+        return await self._changing_lot_base(lot_id, lot, "secrets", secret_str)
 
     async def change_lot_price(self, lot_id: int | str, new_price: str):
-        '''
+        """
         Изменяет цену лота.
 
         Args:
@@ -174,13 +151,13 @@ class FunPayEditor:
         Raises:
             FpxLotEditingError: Цена не изменилась
             FpxRequestError: Плохое соединение с интернетом/сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
-        lot.fields['price'] = new_price
-        return await self._changing_lot_base(lot_id, lot, 'price', new_price)
+        lot.fields["price"] = new_price
+        return await self._changing_lot_base(lot_id, lot, "price", new_price)
 
     async def toggle_off_lot(self, lot_id):
-        '''
+        """
         Выключает лот.
 
         Args:
@@ -189,15 +166,15 @@ class FunPayEditor:
             bool: True - лот выключен
         Raises:
             FpxRequestError: Сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
         response = await self._account._client.edit_lot(lot)
         if response.status_code == 200:
             return True
-        raise fpx_err.FpxRequestError('Ошибка отправки запроса на изменение деталей лота')
+        raise fpx_err.FpxRequestError("Ошибка отправки запроса на изменение деталей лота")
 
     async def toggle_on_lot(self, lot_id):
-        '''
+        """
         Включает лот.
 
         Args:
@@ -206,9 +183,9 @@ class FunPayEditor:
             bool: True - лот включен
         Raises:
             FpxRequestError: Сервер не ответил
-        '''
+        """
         lot = await self._account.lot._get_lot_editor_details(lot_id)
         response = await self._account._client.edit_lot(lot, active=True)
         if response.status_code == 200:
             return True
-        raise fpx_err.FpxRequestError('Ошибка отправки запроса на изменение деталей лота')
+        raise fpx_err.FpxRequestError("Ошибка отправки запроса на изменение деталей лота")

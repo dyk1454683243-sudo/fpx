@@ -6,8 +6,9 @@ from ._profile import ProfileParser
 
 
 class FpxParser(ChatParser, LotParser, OrderParser, ProfileParser, CategoryParser):
-    '''
+    """
     Главный парсер fpx
     Собирает внутри себя методы из отдельных модулей.
-    '''
+    """
+
     pass

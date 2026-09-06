@@ -7,7 +7,7 @@ class OrderManager:
         self._account = account
 
     async def get_order_details(self, order_id):
-        '''
+        """
         Функция запрашивает детали заказа из /orders/{order_id}/.
 
         Args:
@@ -21,31 +21,32 @@ class OrderManager:
                 - chat_id (str): ID чата
         Raises:
             FpxGetOrderInfoError: Ошибка запроса данных заказа
-        '''
+        """
         try:
-            stage = 'запроса данных FunPay'
+            stage = "запроса данных FunPay"
             html = await self._account._client.get_order_info(order_id)
-            stage = 'парсинга данных'
+            stage = "парсинга данных"
             data = self._account._parser.parse_order_page(html)
-            stage = 'типизации данныз'
+            stage = "типизации данныз"
             order = Order(
                 order_id=order_id,
-                status=data['status'],
-                review=data['review'],
-                description=data.get('desc'),
-                chat_id=data['chat_id']
+                status=data["status"],
+                review=data["review"],
+                description=data.get("desc"),
+                chat_id=data["chat_id"],
             )
         except Exception as e:
-            raise fpx_err.FpxGetOrderInfoError(f'При выполнении {stage} произошла ошибка: {e}')
+            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}")
         return order
 
     async def find_orders_by_buyer_name(
-        self, buyer_name: str | None = None,
+        self,
+        buyer_name: str | None = None,
         order_name: str | None = None,
-        search_mode: str = 'partial', # 'exact' полное совпадение, 'partial' по части, 'keywords' по словам
-        full_info: bool = True
+        search_mode: str = "partial",  # 'exact' полное совпадение, 'partial' по части, 'keywords' по словам
+        full_info: bool = True,
     ):
-        '''
+        """
         Ищет все заказы по имени покупателя или названию заказа,
             или по названию заказа и имени покупателя.
 
@@ -76,8 +77,8 @@ class OrderManager:
                 - chat_id (str): ID чата
         Raises:
             FpxGetOrderInfoError: Ошибка запроса данных заказа
-        '''
-        stage = 'запросе данных'
+        """
+        stage = "запросе данных"
         try:
             orders = await self._account.profile.get_my_sells()
             good_orders = []
@@ -86,11 +87,11 @@ class OrderManager:
                 if buyer_name is not None:
                     checks.append(order.client_name == buyer_name)
                 if order_name is not None:
-                    if search_mode == 'exact':
+                    if search_mode == "exact":
                         checks.append(order.name.lower() == order_name.lower())
-                    elif search_mode == 'partial':
+                    elif search_mode == "partial":
                         checks.append(order_name.lower() in order.name.lower())
-                    elif search_mode == 'keywords':
+                    elif search_mode == "keywords":
                         parts = order_name.lower().split()
                         checks.append(all(p in order.name.lower() for p in parts))
                 if checks and all(checks):
@@ -104,12 +105,11 @@ class OrderManager:
                     order.description = full_order.description
                     order.review = full_order.review
         except Exception as e:
-            raise fpx_err.FpxGetOrderInfoError(f'При {stage} произошла ошибка: {e}')
+            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}")
         return good_orders
 
-
     async def refund_order(self, order_id):
-        '''
+        """
         Делает возврат заказа.
 
         Args:
@@ -119,11 +119,11 @@ class OrderManager:
         Raises:
             FpxRefundError: Не удалось сделать возврат.
 
-        '''
+        """
         response = await self._account._client.refund_order(order_id)
         if response.status_code == 200:
             s = await self.get_order_details(order_id)
             status = s.status
-            if status == 'Возврат':
+            if status == "Возврат":
                 return True
-            raise fpx_err.FpxRefundError(f'Невозможно сделать возврат, текущий статус: {status}')
+            raise fpx_err.FpxRefundError(f"Невозможно сделать возврат, текущий статус: {status}")
