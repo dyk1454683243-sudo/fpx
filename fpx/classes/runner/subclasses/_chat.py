@@ -217,9 +217,9 @@ class ChatRunner:
                     msg_obj = await self.runner._account.chat.get_chat_data(chat_cache_obj.chat_id, last_node_id)
                     messages = msg_obj.last_messages
                     for message in messages:
+                        if message is None:
+                            return
                         if int(message.node_msg_id) > int(last_node_id):
-                            if message is None:
-                                return
                             #stop_list = ['изображение', 'image', 'зображення']
                             text = message.text
                             chat_msg = Message(
