@@ -27,11 +27,6 @@ class FpxHandlerError(FpxError):
     def __init__(self, message='Ошибка хендлера'):
         super().__init__(message)
 
-class FpxInvalideCookies(Exception):
-    '''В FunPayTools неправильно переданы куки аккаунта'''
-    def __init__(self, message='В FunPayTools неправильно переданы куки аккаунта'):
-        super().__init__(message)
-
 # Третий уровень, конкретные ошибки
 
 
@@ -41,7 +36,6 @@ class FpxValidateError(FpxAccountError):
     '''Неверный объект'''
     def __init__(self, message='Неверный объект.'):
         super().__init__(message)
-
 
 class FpxLotCreateError(FpxAccountError):
     '''Не удалось создать лот'''
