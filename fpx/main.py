@@ -12,13 +12,16 @@ GSEAL_PATTERN = re.compile(r"^v1\.[a-f0-9]{64}\.[a-f0-9]{32}\.\d+\.k\d+\.[a-f0-9
 
 
 class FunPayTools:
-    def __init__(self, gkey: str, gseal: str, storage: BaseStorage | None = None, proxy=None, http_client=None):
-        if not gkey or not gseal:
+    def __init__(
+        self, gkey: str, gseal: str | None = None, storage: BaseStorage | None = None, proxy=None, http_client=None
+    ):
+        if not gkey:
             raise FpxAuthError("gkey и gseal не могут быть None.")
         if not GKEY_PATTERN.match(gkey):
             raise FpxAuthError("Неверный формат gkey, перепроверь его.")
-        if not GSEAL_PATTERN.match(gseal):
-            raise FpxAuthError("Неверный формат gseal, перепроверь его.")
+        if gseal:
+            if not GSEAL_PATTERN.match(gseal):
+                raise FpxAuthError("Неверный формат gseal, перепроверь его.")
         self._cookies = {"golden_key": gkey, "golden_seal": gseal, "locale": "ru"}
         self._headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",

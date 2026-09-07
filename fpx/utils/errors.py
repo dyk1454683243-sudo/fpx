@@ -42,6 +42,13 @@ class FpxHandlerError(FpxError):
 # аккаунт
 
 
+class FpxAbsentGoldenSeal(FpxAccountError):
+    """Для POST запроса обязателен gseal."""
+
+    def __init__(self, message="Для POST запроса обязателен gseal."):
+        super().__init__(message)
+
+
 class FpxValidateError(FpxAccountError):
     """Неверный объект"""
 
