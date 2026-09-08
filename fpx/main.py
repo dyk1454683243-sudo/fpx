@@ -16,6 +16,10 @@ class FunPayTools:
     def __init__(
         self, gkey: str, gseal: str | None = None, storage: BaseStorage | None = None, proxy=None, http_client=None
     ):
+        if gseal or gseal is None:
+            print(
+                'ВАЖНО: С выхода релиза 0.8.0 аргумент gseal будет удалён, теперь он подставляется '
+                'автоматически, просьба не передавать аргумент gseal во избежание проблем.')
         if not gkey:
             raise FpxAuthError("gkey и gseal не могут быть None.")
         if not GKEY_PATTERN.match(gkey):
