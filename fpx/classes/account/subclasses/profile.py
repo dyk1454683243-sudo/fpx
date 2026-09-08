@@ -156,7 +156,9 @@ class ProfileManager:
             step = "запрос данных FunPay"
             html = await self._account._client.get_finance_page()
             step = "парсинг данных"
-            balance = self._account._parser.parse_finanses(html)
+            balance = self._account._parser.parse_finanses(html.text)
+        except fpx_err.FpxAuthError:
+            raise
         except Exception as e:
             raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}")
         return balance

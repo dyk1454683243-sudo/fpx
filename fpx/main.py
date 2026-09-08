@@ -74,6 +74,7 @@ class FunPayTools:
             pass
 
     async def __aenter__(self):
+        await self.account.profile.get_balance()
         self._refresh_task = asyncio.create_task(self.account.refresh_cookies_cycle())
         return self
 
