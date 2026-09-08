@@ -42,6 +42,13 @@ class FpxHandlerError(FpxError):
 # аккаунт
 
 
+class FpxRefreshCookieError(FpxAccountError):
+    """Ошибка обновления куков"""
+
+    def __init__(self, message="Ошибка обновления куков"):
+        super().__init__(message)
+
+
 class FpxAbsentGoldenSeal(FpxAccountError):
     """Для POST запроса обязателен gseal."""
 

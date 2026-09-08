@@ -15,8 +15,6 @@ class RequestEngine:
         attempts = 3
         backoff = 1.5  # множитель времени ожидания
         if method.upper() in ("POST", "PUT", "DELETE"):
-            if "golden_seal" in self._client.cookies:
-                raise fpx_err.FpxAbsentGoldenSeal()
             if "data" not in kwargs:
                 kwargs["data"] = {}
             if "headers" not in kwargs:

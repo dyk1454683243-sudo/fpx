@@ -1,10 +1,20 @@
 import json
+import secrets
 
 
 class FunPayClient:
     def __init__(self, account, http_client):
         self._account = account
         self.client = http_client
+
+    async def refresh_session_cookies(self) -> dict:
+        objects = [{"type": "chat_counter", "id": "0", "tag": secrets.token_hex(4), "data": False}]
+        payload = {"objects": json.dumps(objects)}
+        headers = {"X-Requested-With": "XMLHttpRequest"}
+
+        r = await self.client.request("POST", "/runner/", data=payload, headers=headers)
+
+        return r
 
     async def get_chats_page(self) -> str:
         r = await self._account._request_engine.execute("GET", "/chat/")
