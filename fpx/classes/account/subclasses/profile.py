@@ -157,6 +157,8 @@ class ProfileManager:
             html = await self._account._client.get_finance_page()
             step = "парсинг данных"
             balance = self._account._parser.parse_finanses(html)
+        except fpx_err.FpxAuthError:
+            raise
         except Exception as e:
             raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}")
         return balance

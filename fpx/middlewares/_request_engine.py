@@ -46,6 +46,8 @@ class RequestEngine:
                     sleep_time = backoff ** float(attempt)
                     await asyncio.sleep(sleep_time)
                     continue
+                if response.url == "https://funpay.com/account/login":
+                    raise fpx_err.FpxAuthError("Неверный gkey, обнови свои куки.")
                 return response
             except httpx.ReadTimeout as e:
                 if method.upper() == "GET":
