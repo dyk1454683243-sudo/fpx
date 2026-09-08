@@ -1,3 +1,5 @@
+import asyncio
+import re
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -14,6 +16,7 @@ from fpx.classes.account.subclasses.order import OrderManager
 from fpx.classes.account.subclasses.profile import ProfileManager
 from fpx.classes.account.subclasses.review import ReviewManager
 from fpx.middlewares._request_engine import RequestEngine
+from fpx.utils.errors import FpxRefreshCookieError
 
 
 @dataclass
@@ -62,3 +65,36 @@ class Account:
 
         result = await self._client.upload_image(image_data)
         return result["fileId"]
+
+    async def _refresh_cookies(self):
+        cookies = await self._client.refresh_session_cookies()
+        headers = cookies.headers
+        MAX_AGE_RE = re.compile(r"max-age=(\d+)", re.IGNORECASE)
+        for raw_cookie in headers.get_list("set-cookie"):
+            if raw_cookie.startswith("golden_seal="):
+                match = MAX_AGE_RE.search(raw_cookie)
+                return int(match.group(1)) if match else None
+        return None
+
+    async def refresh_cookies_cycle(self):
+        """
+        Обновление gseal и PHPSESSID.
+        Запускает цикл обновления куков.
+        Сам внутри обновляет куки каждую неделю.
+
+        Raises:
+            FpxRefreshCookieError: Ошибка обновления куков
+        """
+        while True:
+            ex_time = None
+            atts = 0
+            while ex_time is None:
+                try:
+                    ex_time = await self._refresh_cookies()
+                except Exception as e:
+                    atts += 1
+                    if atts > 3:
+                        raise FpxRefreshCookieError(f"Ошибка обновления куков: {e}")
+                if ex_time is None:
+                    await asyncio.sleep(15)
+            await asyncio.sleep(ex_time)
