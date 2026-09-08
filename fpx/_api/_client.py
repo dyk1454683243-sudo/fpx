@@ -22,7 +22,7 @@ class FunPayClient:
 
     async def get_finance_page(self) -> str:
         r = await self._account._request_engine.execute("GET", "/account/balance")
-        return r
+        return r.text
 
     async def send_message_request(self, node_name, last_msg, text):
         request_data = {
