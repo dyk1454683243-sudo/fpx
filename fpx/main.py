@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 import httpx
@@ -22,7 +23,9 @@ class FunPayTools:
         if gseal:
             if not GSEAL_PATTERN.match(gseal):
                 raise FpxAuthError("Неверный формат gseal, перепроверь его.")
-        self._cookies = {"golden_key": gkey, "golden_seal": gseal, "locale": "ru"}
+        self._cookies = {"golden_key": gkey, "locale": "ru"}
+        if gseal:
+            self._cookies["golden_seal"] = gseal
         self._headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
             "Accept-Language": "ru-RU,ru;q=0.9",
@@ -58,14 +61,28 @@ class FunPayTools:
         self.account._request_engine.runner = self.runner
         self.storage = storage or MemoryStorage()
         self.runner.storage = self.storage
+        self._refresh_task: asyncio.Task | None = None
+
+        try:
+            loop = asyncio.get_running_loop()
+            self._refresh_task = loop.create_task(self.account.refresh_cookies_cycle())
+        except RuntimeError:
+            pass
 
     async def __aenter__(self):
+        self._refresh_task = asyncio.create_task(self.account.refresh_cookies_cycle())
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.shutdown()
 
     async def shutdown(self):
+        if self._refresh_task and not self._refresh_task.done():
+            self._refresh_task.cancel()
+            try:
+                await self._refresh_task
+            except asyncio.CancelledError:
+                pass
         if hasattr(self, "runner") and self.runner.is_running:
             self.runner.is_running = False
         if self._client and not self._client.is_closed:
