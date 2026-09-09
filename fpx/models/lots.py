@@ -15,37 +15,25 @@ class CurrentLotInfo:
     async def edit_price(self, new_price: float) -> Any:
         """Изменяет цену лота"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
-                "Объект CurrentLotInfo не привязан к клиенту fpx"
-            )
+            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
         return await self._client.editor.change_lot_price(self.id, new_price)
 
     async def raise_lots(self) -> Any:
         """Поднимает все лоты"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
-                "Объект CurrentLotInfo не привязан к клиенту fpx"
-            )
+            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
         return await self._client.lot.raise_lots()
 
     async def deactivate(self) -> Any:
         """Выключает лот"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
-                "Объект CurrentLotInfo не привязан к клиенту fpx"
-            )
+            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
         return await self._client.editor.toggle_off_lot(self.id)
 
     async def activate(self) -> Any:
         """Включает лот"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
-                "Объект CurrentLotInfo не привязан к клиенту fpx"
-            )
+            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
         return await self._client.editor.toggle_on_lot(self.id)
 
 
@@ -234,29 +222,25 @@ class LotInfo:
     async def edit_price(self, new_price: float) -> Any:
         """Изменяет цену лота"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
         return await self._client.editor.change_lot_price(self.id, new_price)
 
     async def raise_lots(self) -> Any:
         """Поднимает все лоты"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
         return await self._client.lot.raise_lots()
 
     async def deactivate(self) -> Any:
         """Выключает лот"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
         return await self._client.editor.toggle_off_lot(self.id)
 
     async def activate(self) -> Any:
         """Включает лот"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
         return await self._client.editor.toggle_on_lot(self.id)
 
 
