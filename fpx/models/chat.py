@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, List
+from typing import Any, List, cast
 
 from fpx.utils import errors as fpx_err
 
@@ -36,9 +36,10 @@ class Message:
     async def answer(self, answer_text: str) -> bool:
         """Ответить в этот же чат"""
         if not self._client:
-            raise fpx_err.FpxClientNotAttachedError("Объект Message не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxClientNotAttachedError("Объект Message не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
         formatted_reply = answer_text.format(sender=self.sender, chat_id=self.chat_id, text=self.text)
-        return await self._client._account.chat.send_message(self.chat_id, formatted_reply)
+        return cast(bool, await self._client._account.chat.send_message(self.chat_id, formatted_reply))
 
 
 @dataclass
