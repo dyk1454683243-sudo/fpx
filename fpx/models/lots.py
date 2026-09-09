@@ -12,28 +12,40 @@ class CurrentLotInfo:
     price: float
     _client: Any = field(init=False, repr=False, default=None)
 
-    async def edit_price(self, new_price):
+    async def edit_price(self, new_price: float) -> Any:
         """Изменяет цену лота"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
+                "Объект CurrentLotInfo не привязан к клиенту fpx"
+            )
         return await self._client.editor.change_lot_price(self.id, new_price)
 
-    async def raise_lots(self):
+    async def raise_lots(self) -> Any:
         """Поднимает все лоты"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
+                "Объект CurrentLotInfo не привязан к клиенту fpx"
+            )
         return await self._client.lot.raise_lots()
 
-    async def deactivate(self):
+    async def deactivate(self) -> Any:
         """Выключает лот"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
+                "Объект CurrentLotInfo не привязан к клиенту fpx"
+            )
         return await self._client.editor.toggle_off_lot(self.id)
 
-    async def activate(self):
+    async def activate(self) -> Any:
         """Включает лот"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект CurrentLotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError(  # type: ignore[no-untyped-call]
+                "Объект CurrentLotInfo не привязан к клиенту fpx"
+            )
         return await self._client.editor.toggle_on_lot(self.id)
 
 
@@ -45,7 +57,7 @@ class LotEditor:
     node_id: str
     location: str
     deleted: str
-    fields: dict = field(default_factory=dict)
+    fields: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -76,10 +88,20 @@ class LotCreationFields:
     _location: str
     _deleted: str
 
-    def get_field(self, field_key):
+    def get_field(self, field_key: str) -> LotField | None:
         for f in self.fields:
             if f.key == field_key:
                 return f
+        return None
+
+    def _require_field(self, field_key: str) -> LotField:
+        """
+        Как get_field, но гарантирует не-None результат (для внутреннего использования
+        в свойствах ниже, где отсутствие обязательного филда, баг данных, а не штатный случай).
+        """
+        f = self.get_field(field_key)
+        assert f is not None, f"Филд с ключом '{field_key}' отсутствует в LotCreationFields.fields"
+        return f
 
     def set_field(self, k: str, val: str) -> None:
         """
@@ -93,110 +115,109 @@ class LotCreationFields:
             if f.key == k:
                 f.value = val
 
-    def get_field_options(self, k: str):
-        for f in self.fields:
-            if f.key == k:
-                return f.options
+    def get_field_options(self, k: str) -> list[FieldOptions] | None:
+        f = self.get_field(k)
+        return f.options if f is not None else None
 
     @property
-    def short_desc_ru(self):
-        return self.get_field("fields[summary][ru]").value
+    def short_desc_ru(self) -> str | None:
+        return self._require_field("fields[summary][ru]").value
 
     @short_desc_ru.setter
-    def short_desc_ru(self, text):
-        f = self.get_field("fields[summary][ru]")
+    def short_desc_ru(self, text: str) -> None:
+        f = self._require_field("fields[summary][ru]")
         f.value = text
 
     @property
-    def short_desc_en(self):
-        return self.get_field("fields[summary][en]").value
+    def short_desc_en(self) -> str | None:
+        return self._require_field("fields[summary][en]").value
 
     @short_desc_en.setter
-    def short_desc_en(self, text):
-        f = self.get_field("fields[summary][en]")
+    def short_desc_en(self, text: str) -> None:
+        f = self._require_field("fields[summary][en]")
         f.value = text
 
     @property
-    def desc_ru(self):
-        return self.get_field("fields[desc][ru]").value
+    def desc_ru(self) -> str | None:
+        return self._require_field("fields[desc][ru]").value
 
     @desc_ru.setter
-    def desc_ru(self, text):
-        f = self.get_field("fields[desc][ru]")
+    def desc_ru(self, text: str) -> None:
+        f = self._require_field("fields[desc][ru]")
         f.value = text
 
     @property
-    def desc_en(self):
-        return self.get_field("fields[desc][en]").value
+    def desc_en(self) -> str | None:
+        return self._require_field("fields[desc][en]").value
 
     @desc_en.setter
-    def desc_en(self, text):
-        f = self.get_field("fields[desc][en]")
+    def desc_en(self, text: str) -> None:
+        f = self._require_field("fields[desc][en]")
         f.value = text
 
     @property
-    def secrets(self):
-        secrets = self.get_field("secrets").value
-        return secrets.split("\n")
+    def secrets(self) -> list[str]:
+        secrets = self._require_field("secrets").value
+        return secrets.split("\n") if secrets is not None else []
 
     @secrets.setter
-    def secrets(self, val: list[str]):
-        f = self.get_field("secrets")
+    def secrets(self, val: list[str]) -> None:
+        f = self._require_field("secrets")
         f.value = "\n".join(val)
 
     @property
-    def payment_msg_ru(self):
-        return self.get_field("fields[payment_msg][ru]").value
+    def payment_msg_ru(self) -> str | None:
+        return self._require_field("fields[payment_msg][ru]").value
 
     @payment_msg_ru.setter
-    def payment_msg_ru(self, text):
-        f = self.get_field("fields[payment_msg][ru]")
+    def payment_msg_ru(self, text: str) -> None:
+        f = self._require_field("fields[payment_msg][ru]")
         f.value = text
 
     @property
-    def payment_msg_en(self):
-        return self.get_field("fields[payment_msg][en]").value
+    def payment_msg_en(self) -> str | None:
+        return self._require_field("fields[payment_msg][en]").value
 
     @payment_msg_en.setter
-    def payment_msg_en(self, text):
-        f = self.get_field("fields[payment_msg][en]")
+    def payment_msg_en(self, text: str) -> None:
+        f = self._require_field("fields[payment_msg][en]")
         f.value = text
 
     @property
-    def amount(self):
-        return self.get_field("amount").value
+    def amount(self) -> str | None:
+        return self._require_field("amount").value
 
     @amount.setter
-    def amount(self, val):
-        f = self.get_field("amount")
+    def amount(self, val: str) -> None:
+        f = self._require_field("amount")
         f.value = val
 
     @property
-    def price(self):
-        return self.get_field("price").value
+    def price(self) -> str | None:
+        return self._require_field("price").value
 
     @price.setter
-    def price(self, val):
-        f = self.get_field("price")
+    def price(self, val: str) -> None:
+        f = self._require_field("price")
         f.value = val
 
     @property
-    def images(self):
+    def images(self) -> list[str]:
         """
         Список id фоток
         """
-        images = self.get_field("fields[images]").value
-        return images.split(",")
+        images = self._require_field("fields[images]").value
+        return images.split(",") if images is not None else []
 
     @images.setter
-    def images(self, images: list[str]):
+    def images(self, images: list[str]) -> None:
         """
         Список id фоток
         """
-        f = self.get_field("fields[images]")
+        f = self._require_field("fields[images]")
         f.value = ",".join(str(i) for i in images)
 
-    def validate(self):
+    def validate(self) -> bool:
         """Валидация объекта"""
         required = [self.price, self.amount, self.short_desc_ru, self.short_desc_en]
         if all(v is not None for v in required):
@@ -210,28 +231,32 @@ class LotInfo:
     id: str
     _client: Any = field(init=False, repr=False, default=None)
 
-    async def edit_price(self, new_price):
+    async def edit_price(self, new_price: float) -> Any:
         """Изменяет цену лота"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
         return await self._client.editor.change_lot_price(self.id, new_price)
 
-    async def raise_lots(self):
+    async def raise_lots(self) -> Any:
         """Поднимает все лоты"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
         return await self._client.lot.raise_lots()
 
-    async def deactivate(self):
+    async def deactivate(self) -> Any:
         """Выключает лот"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
         return await self._client.editor.toggle_off_lot(self.id)
 
-    async def activate(self):
+    async def activate(self) -> Any:
         """Включает лот"""
         if not self._client:
-            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxCriticalRunnerError("Объект LotInfo не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
         return await self._client.editor.toggle_on_lot(self.id)
 
 
