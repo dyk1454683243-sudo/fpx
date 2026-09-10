@@ -32,7 +32,7 @@ pip install -U fpx-engine
 
 ## Минимальный пример
 
-Получение нового сообщения и автоматический ответ на него. `golden_key` и `golden_seal` — это куки твоего аккаунта на funpay.com (как их достать — в [быстром старте](quickstart.md)):
+Получение нового сообщения и автоматический ответ на него. `golden_key` - это куки твоего аккаунта на funpay.com (как их достать — в [быстром старте](quickstart.md)):
 
 ```python
 import asyncio
@@ -40,7 +40,7 @@ from fpx import FunPayTools, types
 
 
 async def main():
-    fp = FunPayTools("golden_key", "golden_seal")
+    fp = FunPayTools("golden_key")
 
     @fp.router.on_message()
     async def answer_message(message: types.Message):
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 ```python
 from fpx import FunPayTools, types
 
-fp = FunPayTools("golden_key", "golden_seal")
+fp = FunPayTools("golden_key")
 
 
 @fp.router.on_message()
@@ -82,7 +82,7 @@ async def new_msg(message: types.Message):
 ```python
 from fpx import FunPayTools, types
 
-fp = FunPayTools("golden_key", "golden_seal")
+fp = FunPayTools("golden_key")
 
 account = fp.account
 runner = fp.runner
@@ -148,7 +148,7 @@ from handlers.messages import router as messages_router
 
 
 async def main():
-    fp = FunPayTools("golden_key", "golden_seal")
+    fp = FunPayTools("golden_key")
 
     # простой вариант:
     fp.router.include_router(messages_router)

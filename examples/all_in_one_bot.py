@@ -6,7 +6,7 @@ CATEGORY_TO_WATCH = 1316
 
 
 async def main():
-    fp = FunPayTools("YOUR_GOLDEN_KEY", "YOUR_GOLDEN_SEAL")
+    fp = FunPayTools("YOUR_GOLDEN_KEY")
 
     # ─── Старт ───
     @fp.router.on_startup()

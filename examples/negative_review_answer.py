@@ -4,7 +4,7 @@ from fpx import FunPayTools, types
 
 
 async def main():
-    fp = FunPayTools("YOUR_GOLDEN_KEY", "YOUR_GOLDEN_SEAL")
+    fp = FunPayTools("YOUR_GOLDEN_KEY")
 
     @fp.router.on_new_review(stars=1)
     @fp.router.on_new_review(stars=2)

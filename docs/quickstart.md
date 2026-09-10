@@ -7,11 +7,11 @@
 
 ## 1. Получение golden_key
 
-Для работы нужен твой `golden_key` и `golden_seal` - они берутся из куков браузера.
+Для работы нужен твой `golden_key` - он берется из куков браузера.
 
 1. Открываешь [funpay.com](https://funpay.com), заходишь в аккаунт.
 2. F12 → Application → Cookies → `https://funpay.com`
-3. Ищешь куку `golden_key`, `golden_seal` и копируешь её значение.
+3. Ищешь куку `golden_key` и копируешь её значение.
 
 ⚠️ **НИКОГДА** не выкладывай куки в открытый доступ. Это полный доступ к твоему аккаунту.
 
@@ -31,7 +31,7 @@ from fpx import FunPayTools, types
 
 
 async def main():
-    fp = FunPayTools("ВАШ_GOLDEN_KEY", "ВАШ_GOLDEN_SEAL")
+    fp = FunPayTools("ВАШ_GOLDEN_KEY")
 
     @fp.router.on_message()
     async def echo(message: types.Message):

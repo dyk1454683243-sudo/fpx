@@ -55,7 +55,7 @@ FpxError
 | Класс | Когда кидается |
 |-------|----------------|
 | `FpxError` | Базовая ошибка, ловит всё |
-| `FpxAuthError` | Передан неверный `golden_key`/`golden_seal` |
+| `FpxAuthError` | Передан неверный `golden_key` |
 | `FpxGetChatsError` | Не удалось запросить список чатов |
 | `FpxMessageDeliverError` | Сообщение не отправилось |
 | `FpxRaisingLotError` | Не удалось поднять лоты (нет лотов или ошибка) |

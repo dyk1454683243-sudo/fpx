@@ -56,8 +56,8 @@ from fpx import FunPayTools, types
 
 
 async def main():
-    # инициализируем аккаунт (golden_key и golden_seal - куки твоего аккаунта на funpay.com)
-    fp = FunPayTools("golden_key", "golden_seal")
+    # инициализируем аккаунт (golden_key - куки твоего аккаунта на funpay.com)
+    fp = FunPayTools("golden_key")
 
     # ловим сообщение
     @fp.router.on_message()
