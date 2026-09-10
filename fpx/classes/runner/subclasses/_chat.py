@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import logging
 import re
+from typing import Any, Callable
 
 from fpx.fsm import FSMContext
 from fpx.models.chat import Message
@@ -11,17 +12,19 @@ logger = logging.getLogger("fpx.chat_runner")
 
 
 class ChatRunner:
-    def __init__(self, runner):
+    def __init__(self, runner: Any) -> None:
+        # runner: Runner (см. fpx/classes/runner/runner.py). Оставлен как Any,
+        # так как сам класс Runner ещё не аннотирован (отдельная задача #17).
         self.runner = runner
-        self._chat_last_ids = {}
+        self._chat_last_ids: dict[str | int, str] = {}
 
-    def _compare_chat_cache(self):
+    def _compare_chat_cache(self) -> list[Message]:
         """
         Сравнивает старый кеш сообщений с новым, если находит отличия,
         выносит сообщение в список,
         после чего возвращает полный список
         """
-        result = []
+        result: list[Message] = []
         if self.runner._cache["msgs"] != self.runner._cache["old_msgs"]:
             for message in self.runner._cache["msgs"]:
                 if message not in self.runner._cache["old_msgs"]:
@@ -61,7 +64,7 @@ class ChatRunner:
                         )
         return result
 
-    async def _update_chat_cache(self):
+    async def _update_chat_cache(self) -> None:
         """
         Обновляет кеш последних чатов
         """
@@ -77,7 +80,7 @@ class ChatRunner:
         self.runner._cache["old_msgs"] = self.runner._cache["msgs"]
         self.runner._cache["msgs"] = result
 
-    async def _process_message(self, message: Message, state_ctx):
+    async def _process_message(self, message: Message, state_ctx: FSMContext) -> bool:
         if not message.text:
             return False
         full_text = message.text.lower().strip()
@@ -92,9 +95,7 @@ class ChatRunner:
                     text_param_names = [
                         name
                         for name, param in sig.parameters.items()
-                        if param.annotation is str
-                        and param.default is inspect.Parameter.empty
-                        and param.annotation not in (Message, FSMContext)
+                        if param.annotation is str and param.default is inspect.Parameter.empty
                     ]
                     if len(args) < len(text_param_names):
                         missing_param = text_param_names[len(args)]
@@ -106,14 +107,14 @@ class ChatRunner:
                     return True
         return False
 
-    def _check_text_filter(self, msg_text, filter_text, mapping):
+    def _check_text_filter(self, msg_text: str, filter_text: str | None, mapping: Any) -> bool:
         if filter_text is None:
             return True
         if isinstance(filter_text, str) and msg_text.startswith(filter_text.lower()):
             return True
         return False
 
-    def _check_contains_filter(self, msg_text, h_filter):
+    def _check_contains_filter(self, msg_text: str, h_filter: str | list[str] | None) -> bool:
         if isinstance(h_filter, str):
             h_filter = [h_filter]
         if h_filter is not None:
@@ -123,7 +124,7 @@ class ChatRunner:
             return False
         return True
 
-    def _check_regex(self, msg_text, h_regex):
+    def _check_regex(self, msg_text: str, h_regex: str | list[str] | None) -> bool:
         if isinstance(h_regex, str):
             h_regex = [h_regex]
         if h_regex is not None:
@@ -133,7 +134,7 @@ class ChatRunner:
             return False
         return True
 
-    def _chat_id_check(self, msg: Message, h_chat_id):
+    def _chat_id_check(self, msg: Message, h_chat_id: str | int | list[str | int] | None) -> bool:
         if isinstance(h_chat_id, str | int):
             h_chat_id = [h_chat_id]
         if h_chat_id is not None:
@@ -143,7 +144,7 @@ class ChatRunner:
             return True
         return True
 
-    def _sender_check(self, msg: Message, h_sender):
+    def _sender_check(self, msg: Message, h_sender: str | int | list[str | int] | None) -> bool:
         if isinstance(h_sender, str | int):
             h_sender = [h_sender]
         if h_sender is not None:
@@ -153,7 +154,7 @@ class ChatRunner:
             return True
         return True
 
-    async def _custom_check(self, msg, h_custom):
+    async def _custom_check(self, msg: Message, h_custom: Callable[[Message], Any] | None) -> bool:
         if h_custom is not None:
             if asyncio.iscoroutinefunction(h_custom):
                 is_match = await h_custom(msg)
@@ -164,7 +165,7 @@ class ChatRunner:
             return False
         return True
 
-    async def _check_filters(self, message: Message, handler):
+    async def _check_filters(self, message: Message, handler: dict[str, Any]) -> bool:
         msg_text = message.text.lower()
         if not self._check_text_filter(msg_text, handler["filter_text"], handler["mapping"]):
             return False
@@ -180,7 +181,7 @@ class ChatRunner:
             return False
         return True
 
-    async def _trigger_message_handlers(self, message):
+    async def _trigger_message_handlers(self, message: Message) -> None:
         if self.runner._account.data.username is None:
             await self.runner._account.profile.get_user_data()
         if self.runner._account.data.username == message.sender:
@@ -215,15 +216,15 @@ class ChatRunner:
             await self.runner.router.invoke(handler["function"], message, state_ctx)
             break
 
-    def get_last_id(self, chat_id):
+    def get_last_id(self, chat_id: str | int) -> str | None:
         return self._chat_last_ids.get(chat_id)
 
-    async def _check_chats(self):
+    async def _check_chats(self) -> None:
         await self._update_chat_cache()
         chats = self._compare_chat_cache()
         if chats:
 
-            async def process_single_chat(chat_cache_obj):
+            async def process_single_chat(chat_cache_obj: Message) -> None:
                 chat_msg = None
                 try:
                     last_node_id = self.get_last_id(chat_cache_obj.chat_id) or 0
