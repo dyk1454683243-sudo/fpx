@@ -1,9 +1,10 @@
 import asyncio
 import re
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 import aiofiles
+import httpx
 
 from fpx._api._client import FunPayClient
 from fpx._parsers import FpxParser
@@ -26,7 +27,7 @@ class AccountData:
     username: Optional[str] = None
     user_id: Optional[str] = None
     _csrf_token: Optional[str] = None
-    _node_names: dict = field(default_factory=dict)
+    _node_names: dict[str, Any] = field(default_factory=dict)
 
 
 class Account:
@@ -34,7 +35,7 @@ class Account:
     Взаимодействует с аккаунтом.
     """
 
-    def __init__(self, client):
+    def __init__(self, client: httpx.AsyncClient) -> None:
         self._http_client = client
         self._client = FunPayClient(self, self._http_client)
         self._request_engine = RequestEngine(self, self._http_client)
@@ -49,7 +50,7 @@ class Account:
         self.review = ReviewManager(self)
         self.category = CategoryManager(self)
 
-    async def upload_image(self, file_path):
+    async def upload_image(self, file_path: str) -> int:
         """
         Загрузка изображения на FunPay.
         Args:
@@ -64,9 +65,9 @@ class Account:
             image_data = await f.read()
 
         result = await self._client.upload_image(image_data)
-        return result["fileId"]
+        return int(result["fileId"])
 
-    async def _refresh_cookies(self):
+    async def _refresh_cookies(self) -> Optional[int]:
         cookies = await self._client.refresh_session_cookies()
         headers = cookies.headers
         MAX_AGE_RE = re.compile(r"max-age=(\d+)", re.IGNORECASE)
@@ -76,7 +77,7 @@ class Account:
                 return int(match.group(1)) if match else None
         return None
 
-    async def refresh_cookies_cycle(self):
+    async def refresh_cookies_cycle(self) -> None:
         """
         Обновление gseal и PHPSESSID.
         Запускает цикл обновления куков.
