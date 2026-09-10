@@ -1,12 +1,16 @@
-from fpx.models.chat import ChatData, Message
+from typing import Any, cast
+
+from fpx.models.chat import Chat, ChatData, Message
 from fpx.utils import errors as fpx_err
 
 
 class ChatManager:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
 
-    async def get_chats(self):
+    async def get_chats(self) -> list[Chat]:
         """
         Собирает все чаты на аккаунте.
 
@@ -30,9 +34,9 @@ class ChatManager:
             chats = self._account._parser.parse_chats_list(html)
         except Exception as e:
             raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}")
-        return chats
+        return cast(list[Chat], chats)
 
-    async def send_message(self, chat_id: str, text: str, with_nodes: bool = False):
+    async def send_message(self, chat_id: str, text: str, with_nodes: bool = False) -> dict[str, Any]:
         """
         Отправляет сообщение.
 
@@ -59,13 +63,15 @@ class ChatManager:
         except Exception as e:
             raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
         if response.get("error") is None:
-            return response
+            return cast(dict[str, Any], response)
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
-            raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")
+            raise fpx_err.FpxMessageDeliverError(
+                f"Сервер вернул ошибку: {error_code} - {error_msg}"
+            )
 
-    async def get_chat_data(self, chat_id: int | str, last_message_node_id: int | str | None = None):
+    async def get_chat_data(self, chat_id: int | str, last_message_node_id: int | str | None = None) -> ChatData:
         """
         Получает данные чата.
 
@@ -92,7 +98,7 @@ class ChatManager:
             data = self._account._parser.parse_chat(html)
         except Exception as e:
             raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}")
-        good_msg_list = []
+        good_msg_list: list[Message] = []
         if data.get("messages"):
             message_list = []
             for msg in data.get("messages"):
@@ -124,7 +130,7 @@ class ChatManager:
         self._account.data.user_id = chat.user_id
         return chat
 
-    async def send_image(self, chat_id, image_id):
+    async def send_image(self, chat_id: str | int, image_id: str | int) -> dict[str, Any]:
         """
         Отправка изображения в чат
         Args:
@@ -150,8 +156,10 @@ class ChatManager:
         except Exception as e:
             raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
         if response.get("error") is None:
-            return response
+            return cast(dict[str, Any], response)
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
-            raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")
+            raise fpx_err.FpxMessageDeliverError(
+                f"Сервер вернул ошибку: {error_code} - {error_msg}"
+            )

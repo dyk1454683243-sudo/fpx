@@ -1,13 +1,17 @@
+from typing import Any, cast
+
 from fpx.models.account import Game
 from fpx.models.lots import CategoryLastLot
 from fpx.utils import errors as fpx_err
 
 
 class CategoryManager:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
 
-    async def get_lot_category_last_lot(self, lot_category_id):
+    async def get_lot_category_last_lot(self, lot_category_id: str | int) -> list[CategoryLastLot]:
         """
         Находит самый дешевый лот в категории по каждому из фильтров.
 
@@ -30,13 +34,15 @@ class CategoryManager:
             stage = "парсингa данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}")
-        result = []
+            raise fpx_err.FpxGetLastCategoryLotError(
+                f"При выполнении {stage} произошла ошибка: {e}"
+            )
+        result: list[CategoryLastLot] = []
         for el in data:
-            result.append(CategoryLastLot(category_id=lot_category_id, **el))
+            result.append(CategoryLastLot(category_id=str(lot_category_id), **el))
         return result
 
-    async def get_chip_category_last_lot(self, chip_category_id):
+    async def get_chip_category_last_lot(self, chip_category_id: str | int) -> list[CategoryLastLot]:
         """
         Находит самый дешевый лот краткий в категории по каждому из фильтров.
 
@@ -59,10 +65,12 @@ class CategoryManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}")
-        result = []
+            raise fpx_err.FpxGetLastCategoryLotError(
+                f"При выполнении {stage} произошла ошибка: {e}"
+            )
+        result: list[CategoryLastLot] = []
         for el in data:
-            result.append(CategoryLastLot(category_id=chip_category_id, **el))
+            result.append(CategoryLastLot(category_id=str(chip_category_id), **el))
         return result
 
     async def get_all_categories(self) -> list[Game]:
@@ -87,9 +95,9 @@ class CategoryManager:
             data = self._account._parser.parse_all_categories(html)
         except Exception as e:
             raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
-        return data
+        return cast(list[Game], data)
 
-    async def find_category(self, target):
+    async def find_category(self, target: str) -> list[Game]:
         """
         Использует встроенный поиск фанпей,
         ищет категории по совпадениям, допустимы
@@ -117,4 +125,4 @@ class CategoryManager:
             data = self._account._parser.parse_all_categories(html["html"])
         except Exception as e:
             raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
-        return data
+        return cast(list[Game], data)

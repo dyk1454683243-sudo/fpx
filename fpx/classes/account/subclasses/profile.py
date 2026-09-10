@@ -1,15 +1,18 @@
 import asyncio
+from typing import Any, cast
 
-from fpx.models.account import CurReview, Order, Profile, UserData
+from fpx.models.account import Balance, CurReview, Order, Profile, UserData
 from fpx.models.lots import LotInfo
 from fpx.utils import errors as fpx_err
 
 
 class ProfileManager:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
 
-    async def get_user_data(self):
+    async def get_user_data(self) -> UserData:
         """
         Запрашивает данные юзера, сохраняет их в кеш.
 
@@ -34,7 +37,7 @@ class ProfileManager:
             raise fpx_err.FpxGetUserDataError(f"При выполнении {stage} произошла ошибка: {e}")
         return user_data
 
-    async def get_my_sells(self, limit: int = 0):
+    async def get_my_sells(self, limit: int = 0) -> list[Order]:
         """
         Запрашивает страницу продаж юзера.
 
@@ -54,6 +57,7 @@ class ProfileManager:
         Raises:
             FpxGetUserSellsError: Ошибка запроса продаж
         """
+        counter = 0
         try:
             next_stage = True
             count_of_sells = 0
@@ -77,12 +81,11 @@ class ProfileManager:
                     next_stage = False
                     break
                 await asyncio.sleep(3)
-            counter = 0
         except Exception as e:
             raise fpx_err.FpxGetUserSellsError(f"При выполнении {stage} произошла ошибка: {e}")
         if limit > 0:
             counter += 1
-        result = []
+        result: list[Order] = []
         for i in data:
             if limit != 0 and counter > limit:
                 break
@@ -101,7 +104,7 @@ class ProfileManager:
             counter += 1
         return result
 
-    async def profile(self, user_id=None):
+    async def profile(self, user_id: str | int | None = None) -> Profile:
         """
         Запрашивает профиль юзера.
         Args:
@@ -140,7 +143,7 @@ class ProfileManager:
             raise fpx_err.FpxGetProfileError(f"При выполнении {step} произошла ошибка: {e}")
         return profile
 
-    async def get_balance(self):
+    async def get_balance(self) -> Balance:
         """
         Собирает баланс аккаунта.
 
@@ -160,5 +163,7 @@ class ProfileManager:
         except fpx_err.FpxAuthError:
             raise
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}")
-        return balance
+            raise fpx_err.FpxGetProfileError(
+                f"При сборе баланса, выполняя {step} произошла ошибка: {e}"
+            )
+        return cast(Balance, balance)
