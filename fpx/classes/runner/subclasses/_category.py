@@ -1,16 +1,19 @@
 import asyncio
+from typing import Any
 
 
 class CategoryRunner:
-    def __init__(self, runner):
+    def __init__(self, runner: Any) -> None:
+        # runner: Runner (см. fpx/classes/runner/runner.py). Оставлен как Any,
+        # так как сам класс Runner ещё не аннотирован (отдельная задача #17).
         self.runner = runner
 
-    async def _update_lot_category_cache(self, lot_category_ids):
+    async def _update_lot_category_cache(self, lot_category_ids: list[str | int]) -> None:
         tasks = [self.runner._account.category.get_lot_category_last_lot(cat_id) for cat_id in lot_category_ids]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         new_cache = []
         for category_id, lots in zip(lot_category_ids, results):
-            if isinstance(lots, Exception):
+            if isinstance(lots, BaseException):
                 continue
             for lot in lots:
                 lot.category_id = category_id
@@ -18,12 +21,12 @@ class CategoryRunner:
         self.runner._cache["old_lot_categories"] = self.runner._cache.get("lot_categories", [])
         self.runner._cache["lot_categories"] = new_cache
 
-    async def _update_chip_category_cache(self, chip_category_ids):
+    async def _update_chip_category_cache(self, chip_category_ids: list[str | int]) -> None:
         tasks = [self.runner._account.category.get_chip_category_last_lot(cat_id) for cat_id in chip_category_ids]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         new_cache = []
         for category_id, lots in zip(chip_category_ids, results):
-            if isinstance(lots, Exception):
+            if isinstance(lots, BaseException):
                 continue
             for lot in lots:
                 lot.category_id = category_id
@@ -31,8 +34,8 @@ class CategoryRunner:
         self.runner._cache["old_chip_categories"] = self.runner._cache.get("chip_categories", [])
         self.runner._cache["chip_categories"] = new_cache
 
-    def _compare_lot_category_cache(self):
-        result = []
+    def _compare_lot_category_cache(self) -> list[Any]:
+        result: list[Any] = []
         old_cache = self.runner._cache.get("old_lot_categories", [])
         current_cache = self.runner._cache.get("lot_categories", [])
         if not old_cache:
@@ -47,8 +50,8 @@ class CategoryRunner:
                 result.append(lot)
         return result
 
-    def _compare_chip_category_cache(self):
-        result = []
+    def _compare_chip_category_cache(self) -> list[Any]:
+        result: list[Any] = []
         old_cache = self.runner._cache.get("old_chip_categories", [])
         current_cache = self.runner._cache.get("chip_categories", [])
         if not old_cache:
@@ -63,7 +66,7 @@ class CategoryRunner:
                 result.append(lot)
         return result
 
-    async def _check_lot_categories(self, lot_category_ids):
+    async def _check_lot_categories(self, lot_category_ids: list[str | int]) -> None:
         await self._update_lot_category_cache(lot_category_ids)
         lots = self._compare_lot_category_cache()
         if lots:
@@ -73,7 +76,7 @@ class CategoryRunner:
                 for handler in self.runner.router._handlers["lot_category"]:
                     await self.runner.router.invoke(handler, lot)
 
-    async def _check_chip_categories(self, chip_category_ids):
+    async def _check_chip_categories(self, chip_category_ids: list[str | int]) -> None:
         await self._update_chip_category_cache(chip_category_ids)
         lots = self._compare_chip_category_cache()
         if lots:
