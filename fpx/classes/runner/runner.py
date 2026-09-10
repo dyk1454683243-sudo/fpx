@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -12,15 +12,18 @@ from fpx.utils import errors as fpx_err
 
 
 class Runner:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как типизация здесь через реальный класс Account создала бы
+        # циклический импорт (Account -> Runner -> Account).
         self._account = account
         self._chat = ChatRunner(self)
         self._order = OrderRunner(self)
         self._review = ReviewRunner(self)
         self._category = CategoryRunner(self)
         self.router = Router()
-        self.storage = None
-        self._cache = {
+        self.storage: Optional[Any] = None
+        self._cache: dict[str, list[Any]] = {
             "msgs": [],
             "old_msgs": [],
             "orders": [],
@@ -35,7 +38,7 @@ class Runner:
         self._cache_is_updated = False
         self.is_running = True
 
-    async def idle(self):
+    async def idle(self) -> None:
         """
         Зацикливает выполнение программы, чтобы фоновые задачи не закрылись.
         Если не использовать, код не будет работать.
@@ -44,8 +47,11 @@ class Runner:
             await asyncio.sleep(3600)
 
     async def _run_loop(
-        self, timer, watch_lots: list[str | int] | None = None, watch_chips: list[str | int] | None = None
-    ):
+        self,
+        timer: float,
+        watch_lots: list[str | int] | None = None,
+        watch_chips: list[str | int] | None = None,
+    ) -> None:
         while self.is_running:
             try:
                 await self._cache_runner(watch_lots, watch_chips)
@@ -62,11 +68,11 @@ class Runner:
 
     async def start_polling(
         self,
-        timer=3,
+        timer: float = 3,
         is_background: bool = True,
         watch_lots: list[str | int] | None = None,
         watch_chips: list[str | int] | None = None,
-    ):
+    ) -> Optional["asyncio.Task[None]"]:
         """
         Запускает поиск новых событий.
 
@@ -86,8 +92,9 @@ class Runner:
             return task
         else:
             await self._run_loop(timer, watch_lots, watch_chips)
+            return None
 
-    async def _warm_up(self, watch_lots, watch_chips):
+    async def _warm_up(self, watch_lots: list[str | int] | None, watch_chips: list[str | int] | None) -> None:
         """Прогрев кеша"""
         await self._account.profile.get_user_data()
         tasks = []
@@ -119,7 +126,7 @@ class Runner:
         else:
             self._cache_is_updated = False
 
-    async def _cache_runner(self, watch_lots, watch_chips):
+    async def _cache_runner(self, watch_lots: list[str | int] | None, watch_chips: list[str | int] | None) -> None:
         """Управляет кешем"""
         if not self._cache_is_updated:
             await self._warm_up(watch_lots, watch_chips)
@@ -140,7 +147,7 @@ class Runner:
         if to_raise:
             raise to_raise
 
-    async def _handle_error(self, event: Any, exception: Exception):
+    async def _handle_error(self, event: Any, exception: Exception) -> None:
         """Централизованная обработка любых ошибок.
         event может быть Message, Order, Review или None.
         Советую проверять через if isinstanse(exception, fpx_err...)
