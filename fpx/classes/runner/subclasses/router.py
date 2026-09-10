@@ -1,15 +1,19 @@
 import asyncio
 import inspect
-from typing import Awaitable, Callable
+from typing import Any, Awaitable, Callable, Optional
 
 from fpx.fsm import FSMContext
 from fpx.models.chat import Message
 from fpx.utils.dependencies import Dependency
 
+HandlerFunc = Callable[..., Any]
+Decorator = Callable[[HandlerFunc], HandlerFunc]
+Middleware = Callable[[Any, Callable[[Any], Awaitable[Any]]], Awaitable[Any]]
+
 
 class Router:
-    def __init__(self):
-        self._handlers = {
+    def __init__(self) -> None:
+        self._handlers: dict[str, list[Any]] = {
             "message": [],
             "order": [],
             "confirmed_order": [],
@@ -25,24 +29,30 @@ class Router:
             "startup": [],
             "flood": [],
         }
-        self._middlewares = []
+        self._middlewares: list[Middleware] = []
 
-    def middleware(self):
+    def middleware(self) -> Callable[[Middleware], Middleware]:
         """Декоратор регистрации мидлваря"""
 
-        def decorator(func):
+        def decorator(func: Middleware) -> Middleware:
             self._middlewares.append(func)
             return func
 
         return decorator
 
-    async def invoke(self, h_func, event, state_ctx=None, args=None):
+    async def invoke(
+        self,
+        h_func: HandlerFunc,
+        event: Any,
+        state_ctx: Optional[FSMContext] = None,
+        args: Optional[list[Any]] = None,
+    ) -> None:
         """Вызывает хендлер"""
-        generators_to_close = []
+        generators_to_close: list[Any] = []
 
-        async def endpoint(ev):
+        async def endpoint(ev: Any) -> None:
             sig = inspect.signature(h_func)
-            kwargs = {}
+            kwargs: dict[str, Any] = {}
             arg_index = 0
             nonlocal generators_to_close
             for param_name, param in sig.parameters.items():
@@ -80,11 +90,13 @@ class Router:
                         arg_index += 1
             await h_func(**kwargs)
 
-        call_next = endpoint
+        call_next: Callable[[Any], Awaitable[Any]] = endpoint
         for mw in reversed(self._middlewares):
 
-            async def make_next(mw=mw, next_=call_next):
-                async def call(ev):
+            async def make_next(
+                mw: Middleware = mw, next_: Callable[[Any], Awaitable[Any]] = call_next
+            ) -> Callable[[Any], Awaitable[Any]]:
+                async def call(ev: Any) -> Any:
                     return await mw(ev, next_)
 
                 return call
@@ -99,13 +111,13 @@ class Router:
                 except Exception:
                     pass
 
-    def include_router(self, router):
+    def include_router(self, router: "Router") -> None:
         """Метод для подключения плагинов и сторонних роутеров"""
         for event_type, funcs in router._handlers.items():
             if event_type in self._handlers:
                 self._handlers[event_type].extend(funcs)
 
-    def order_targets(self, target_dict: dict):
+    def order_targets(self, target_dict: dict[str, Any]) -> None:
         """
         Метод для регистрации команд автоматизации новых заказов.
 
@@ -114,7 +126,7 @@ class Router:
         """
         self._handlers["order_command"].append({"trigger_command": target_dict})
 
-    def message_commands(self, command_dict: dict):
+    def message_commands(self, command_dict: dict[str, Any]) -> None:
         """
         Метод для регистрации команд автоматизации сообщений.
 
@@ -123,10 +135,10 @@ class Router:
         """
         self._handlers["commands"].append({"command": command_dict})
 
-    def on_error(self):
+    def on_error(self) -> Decorator:
         """Декоратор для отлова ошибок"""
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["error"].append(func)
             return func
 
@@ -143,7 +155,7 @@ class Router:
         ignore_chat_id: str | int | list[str | int] | None = None,
         ignore_sender: str | list[str] | None = None,
         priority: int = 0,
-    ):
+    ) -> Decorator:
         r"""Декоратор отслеживает новые сообщения.
         Важно что если сделать несколько хендлеров с одинаковыми фильтрами, то подходящее
         сообщение будет вызвано только под первый хендлер.
@@ -179,7 +191,7 @@ class Router:
                 - answer (method): При указании текста в аргументах, отвечает на сообщение
         """
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["message"].append(
                 {
                     "function": func,
@@ -199,7 +211,7 @@ class Router:
 
         return decorator
 
-    def on_orders(self, mapping: list[str] | None = None):
+    def on_orders(self, mapping: list[str] | None = None) -> Decorator:
         """
         Декоратор отслеживает все события заказов.
         Не рекомендуется использовать вместе с on_cofirmed_orders, on_new_order, on_refunded_orders
@@ -219,13 +231,13 @@ class Router:
         if isinstance(mapping, str):
             mapping = [mapping]
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["order"].append({"function": func, "mapping": mapping})
             return func
 
         return decorator
 
-    def on_confirmed_orders(self, mapping: list | None = None):
+    def on_confirmed_orders(self, mapping: list[str] | str | None = None) -> Decorator:
         """
         Декоратор, который отслеживает только событие подтверждёния заказа.
 
@@ -241,13 +253,13 @@ class Router:
         """
         mapping = [mapping] if isinstance(mapping, str) else mapping
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["confirmed_order"].append({"function": func, "mapping": mapping})
             return func
 
         return decorator
 
-    def on_new_order(self, mapping: list | None = None):
+    def on_new_order(self, mapping: list[str] | str | None = None) -> Decorator:
         """
         Декоратор, который отслеживает только новые заказы.
 
@@ -263,13 +275,13 @@ class Router:
         """
         mapping = [mapping] if isinstance(mapping, str) else mapping
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["new_order"].append({"function": func, "mapping": mapping})
             return func
 
         return decorator
 
-    def on_new_review(self, stars: int | None = None):
+    def on_new_review(self, stars: int | None = None) -> Decorator:
         """Декоратор отслеживает новые отзывы.
 
         Args:
@@ -283,13 +295,13 @@ class Router:
                 - item_name (str): Заказ, под которым оставлен отзыв
         """
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["review"].append({"function": func, "stars": stars})
             return func
 
         return decorator
 
-    def on_refunded_orders(self, mapping: list | None = None):
+    def on_refunded_orders(self, mapping: list[str] | str | None = None) -> Decorator:
         """
         Декоратор отслеживает события возврата заказов.
 
@@ -305,13 +317,13 @@ class Router:
         """
         mapping = [mapping] if isinstance(mapping, str) else mapping
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["refund"].append({"function": func, "mapping": mapping})
             return func
 
         return decorator
 
-    def on_lot_category(self):
+    def on_lot_category(self) -> Decorator:
         """
         Декоратор отслеживает снижение цен на лоты.
 
@@ -321,13 +333,13 @@ class Router:
                 - offer_id (str): Айди лота
         """
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["lot_category"].append(func)
             return func
 
         return decorator
 
-    def on_chip_category(self):
+    def on_chip_category(self) -> Decorator:
         """
         Декоратор отслеживает снижение цен на чипсах(коротких лотов под валюты).
 
@@ -337,25 +349,25 @@ class Router:
                 - offer_id (str): Айди лота
         """
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["chip_category"].append(func)
             return func
 
         return decorator
 
-    def on_startup(self):
+    def on_startup(self) -> Decorator:
         """Декоратор отслеживает запуск раннера"""
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["startup"].append(func)
             return func
 
         return decorator
 
-    def on_flood(self):
+    def on_flood(self) -> Decorator:
         """Декоратор отслеживает флуд в системе"""
 
-        def decorator(func):
+        def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["flood"].append(func)
             return func
 
