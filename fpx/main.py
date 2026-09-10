@@ -29,15 +29,12 @@ class FunPayTools:
                 "автоматически, просьба не передавать аргумент gseal во избежание проблем."
             )
         if not gkey:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise FpxAuthError("gkey и gseal не могут быть None.")  # type: ignore[no-untyped-call]
+            raise FpxAuthError("gkey и gseal не могут быть None.")
         if not GKEY_PATTERN.match(gkey):
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise FpxAuthError("Неверный формат gkey, перепроверь его.")  # type: ignore[no-untyped-call]
+            raise FpxAuthError("Неверный формат gkey, перепроверь его.")
         if gseal:
             if not GSEAL_PATTERN.match(gseal):
-                # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-                raise FpxAuthError("Неверный формат gseal, перепроверь его.")  # type: ignore[no-untyped-call]
+                raise FpxAuthError("Неверный формат gseal, перепроверь его.")
         self._cookies = {"golden_key": gkey, "locale": "ru"}
         if gseal:
             self._cookies["golden_seal"] = gseal
@@ -75,11 +72,8 @@ class FunPayTools:
         # TODO(#17): Runner(...) станет типизированным вызовом после аннотации fpx/classes/runner/runner.py
         self.runner = Runner(self.account)  # type: ignore[no-untyped-call]
         self.router = self.runner.router
-        # TODO(#13): RequestEngine.runner сейчас объявлен без аннотации (фактически "None"),
-        # из-за чего присвоение реального Runner формально не соответствует выведенному типу.
-        self.account._request_engine.runner = self.runner  # type: ignore[assignment]
-        # TODO(#13): MemoryStorage(...) станет типизированным вызовом после аннотации fpx/utils/storage
-        self.storage = storage or MemoryStorage()  # type: ignore[no-untyped-call]
+        self.account._request_engine.runner = self.runner
+        self.storage = storage or MemoryStorage()
         self.runner.storage = self.storage
         self._refresh_task: asyncio.Task[Any] | None = None
 

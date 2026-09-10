@@ -25,14 +25,12 @@ class FunPayClient:
         return r
 
     async def get_chats_page(self) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", "/chat/")
-        return cast(str, r.text)
+        return r.text
 
     async def get_finance_page(self) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", "/account/balance")
-        return cast(str, r.text)
+        return r.text
 
     async def send_message_request(self, node_name: str, last_msg: int, text: str) -> dict[str, Any]:
         request_data = {
@@ -44,9 +42,8 @@ class FunPayClient:
             "X-Requested-With": "XMLHttpRequest",
             "Referer": f"https://funpay.com/chat/?node={node_name.split('-')[-1]}",
         }
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("POST", "/runner/", data=payload, headers=headers)
-        return cast(dict[str, Any], r.json())
+        return r.json()
 
     async def send_image_request(self, node_name: str, last_msg: int, image_id: int) -> dict[str, Any]:
         request_data = {
@@ -58,34 +55,28 @@ class FunPayClient:
             "X-Requested-With": "XMLHttpRequest",
             "Referer": f"https://funpay.com/chat/?node={node_name.split('-')[-1]}",
         }
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("POST", "/runner/", data=payload, headers=headers)
-        return cast(dict[str, Any], r.json())
+        return r.json()
 
     async def get_current_chat(self, chat_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/chat/?node={chat_id}")
-        return cast(str, r.text)
+        return r.text
 
     async def get_user_profile(self, user_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/users/{user_id}/")
-        return cast(str, r.text)
+        return r.text
 
     async def lot_menu_by_category(self, category_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/lots/{category_id}/trade")
-        return cast(str, r.text)
+        return r.text
 
     async def get_main_menu(self) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", "/")
-        return cast(str, r.text)
+        return r.text
 
     async def raise_lot(self, node_id: str | int, game_id: str | int) -> Any:
         payload = {"game_id": game_id, "node_id": node_id}
         headers = {"X-Requested-With": "XMLHttpRequest"}
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("POST", "/lots/raise", data=payload, headers=headers)
         if "application/json" in r.headers.get("Content-Type", ""):
             response = r.json()
@@ -94,36 +85,30 @@ class FunPayClient:
             return {"error": "not_json", "status": r.status_code}
 
     async def get_lot_info(self, lot_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/lots/offer?id={lot_id}")
-        return cast(str, r.text)
+        return r.text
 
     async def get_my_sells(self) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", "/orders/trade")
-        return cast(str, r.text)
+        return r.text
 
     async def refund_order(self, order_id: str | int) -> Any:
         url = "/orders/refund"
         payload = {"id": order_id}
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("POST", url, data=payload)
         return r
 
     async def get_order_info(self, order_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/orders/{order_id}/")
-        return cast(str, r.text)
+        return r.text
 
     async def get_lot_editor_data(self, lot_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/lots/offerEdit?offer={lot_id}")
-        return cast(str, r.text)
+        return r.text
 
     async def get_node_editor_data(self, node_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/lots/offerEdit?node={node_id}")
-        return cast(str, r.text)
+        return r.text
 
     async def edit_lot(self, lot: LotEditor, active: bool | None = None) -> Any:
         payload: dict[str, Any] = {
@@ -145,7 +130,6 @@ class FunPayClient:
             "X-Requested-With": "XMLHttpRequest",
             "Referer": f"https://funpay.com/lots/offerEdit?node={lot.node_id}&offer={lot.offer_id}&location=offer",
         }
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("POST", "/lots/offerSave", data=payload, headers=headers)
         return r
 
@@ -167,38 +151,34 @@ class FunPayClient:
             "Referer": f"https://funpay.com/lots/offerEdit?node={lot._node_id}",
             "Origin": "https://funpay.com",
         }
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("POST", "/lots/offerSave", data=payload, headers=headers)
         return r
 
     async def answer_review(self, authorid: str, text: str, orderid: str) -> Any:
         payload = {"authorId": authorid, "text": text, "rating": "", "orderId": orderid}
         headers = {"X-Requested-With": "XMLHttpRequest"}
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         response = await self._account._request_engine.execute("POST", "/orders/review", data=payload, headers=headers)
         return response
 
     async def get_chip_category(self, chip_category_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/chips/{chip_category_id}/")
-        return cast(str, r.text)
+        return r.text
 
     async def get_lot_category(self, lot_category_id: str | int) -> str:
-        # TODO(#13): убрать cast, когда RequestEngine.execute() будет типизирован
         r = await self._account._request_engine.execute("GET", f"/lots/{lot_category_id}/")
-        return cast(str, r.text)
+        return r.text
 
     async def upload_image(self, file_bytes: bytes) -> dict[str, Any]:
         headers = {"X-Requested-With": "XMLHttpRequest"}
         r = await self.client.request(
             "POST", "/file/addChatImage", files={"file": ("image.png", file_bytes, "image/png")}, headers=headers
         )
-        return cast(dict[str, Any], r.json())
+        return r.json()
 
     async def find_category(self, target: str) -> dict[str, Any]:
         headers = {"X-Requested-With": "XMLHttpRequest"}
         r = await self.client.request("POST", "/games/promoFilter", data={"query": target}, headers=headers)
-        return cast(dict[str, Any], r.json())
+        return r.json()
 
     async def calc_category_price(self, price: str | float | int, node_id: str | int) -> dict[str, Any]:
         headers = {"X-Requested-With": "XMLHttpRequest"}
