@@ -17,7 +17,7 @@
 from fpx import FunPayTools, types
 from fpx.fsm import FSMContext
 
-fp = FunPayTools("golden_key", "golden_seal")
+fp = FunPayTools("golden_key")
 
 
 @fp.router.on_message(text="!start")
@@ -69,7 +69,7 @@ async def get_confirm(message: types.Message, state: FSMContext):
 ```python
 from fpx import FunPayTools
 
-fp = FunPayTools("golden_key", "golden_seal")  # MemoryStorage используется автоматически
+fp = FunPayTools("golden_key")  # MemoryStorage используется автоматически
 ```
 
 Данные хранятся в памяти процесса. **Сбрасываются при перезапуске.**
@@ -82,7 +82,7 @@ fp = FunPayTools("golden_key", "golden_seal")  # MemoryStorage использу�
 from fpx import FunPayTools
 from fpx.fsm import FileStorage
 
-fp = FunPayTools("golden_key", "golden_seal", storage=FileStorage("states.json"))
+fp = FunPayTools("golden_key", storage=FileStorage("states.json"))
 ```
 
 Состояния сохраняются в JSON файл который вы укажете в аргументах и **переживают перезапуск**.
@@ -110,7 +110,7 @@ storage = RedisStorage(
     prefix="fpx",  # префикс ключей в Redis, по умолчанию 'fpx'
 )
 
-fp = FunPayTools("golden_key", "golden_seal", storage=storage)
+fp = FunPayTools("golden_key", storage=storage)
 ```
 
 Ключи хранятся в формате `{prefix}:fsm:{chat_id}`, например `fpx:fsm:12345`.

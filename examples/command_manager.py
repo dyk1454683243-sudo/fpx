@@ -37,7 +37,7 @@ async def ping_seller_command(message: types.Message):
 
 async def main():
     # Инициализируем библиотеку
-    fp = FunPayTools("YOUR_GOLDEN_KEY", "YOUR_GOLDEN_SEAL")
+    fp = FunPayTools("YOUR_GOLDEN_KEY")
 
     # Регистрируем команды в роутер
     fp.router.message_commands({"!status": status_command, "!ping": ping_seller_command})

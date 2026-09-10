@@ -100,7 +100,7 @@ from fpx import FunPayTools
 
 
 async def main():
-    fp = FunPayTools("golden_key", "golden_seal")
+    fp = FunPayTools("golden_key")
 
     lot = await fp.account.lot.get_node_editor_data(2794)
 

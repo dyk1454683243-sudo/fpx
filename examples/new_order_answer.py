@@ -4,7 +4,7 @@ from fpx import FunPayTools, types
 
 
 async def main():
-    fp = FunPayTools("YOUR_GOLDEN_KEY", "YOUR_GOLDEN_SEAL")
+    fp = FunPayTools("YOUR_GOLDEN_KEY")
 
     @fp.router.on_new_order()
     async def greet_new_order(order: types.Order):

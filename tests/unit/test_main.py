@@ -9,57 +9,51 @@ from fpx.main import FunPayTools
 from fpx.utils.storage.memory import MemoryStorage
 
 TEST_GKEY = "0123456789abcdef0123456789abcdef"
-TEST_GSEAL = (
-    "v1.0000000000000000000000000000000000000000000000000000000000000000."
-    "00000000000000000000000000000000.1600000000.k1."
-    "0000000000000000000000000000000000000000000000000000000000000000"
-)
 
 
 class TestInit:
     def test_default_http_client_is_created_with_cookies(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL)
+        tools = FunPayTools(TEST_GKEY)
         assert tools._client.cookies["golden_key"] == TEST_GKEY
-        assert tools._client.cookies["golden_seal"] == TEST_GSEAL
         assert isinstance(tools.account, Account)
         assert isinstance(tools.runner, Runner)
         assert tools.router is tools.runner.router
 
     def test_default_storage_is_memory_storage(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL)
+        tools = FunPayTools(TEST_GKEY)
         assert isinstance(tools.storage, MemoryStorage)
         assert tools.runner.storage is tools.storage
 
     def test_custom_storage_is_used(self):
         custom_storage = MemoryStorage()
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL, storage=custom_storage)
+        tools = FunPayTools(TEST_GKEY, storage=custom_storage)
         assert tools.storage is custom_storage
         assert tools.runner.storage is custom_storage
 
     def test_custom_http_client_gets_cookies_and_headers_merged(self):
         http_client = httpx.AsyncClient()
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL, http_client=http_client)
+        tools = FunPayTools(TEST_GKEY, http_client=http_client)
         assert tools._client is http_client
         assert http_client.cookies["golden_key"] == TEST_GKEY
 
     def test_proxy_and_http_client_together_raises(self):
         http_client = httpx.AsyncClient()
         with pytest.raises(ValueError):
-            FunPayTools(TEST_GKEY, TEST_GSEAL, proxy="http://127.0.0.1:8080", http_client=http_client)
+            FunPayTools(TEST_GKEY, proxy="http://127.0.0.1:8080", http_client=http_client)
 
     def test_proxy_alone_builds_client_with_mounts(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL, proxy="http://127.0.0.1:8080")
+        tools = FunPayTools(TEST_GKEY, proxy="http://127.0.0.1:8080")
         assert tools._client is not None
 
     def test_request_engine_linked_to_runner(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL)
+        tools = FunPayTools(TEST_GKEY)
         assert tools.account._request_engine.runner is tools.runner
 
 
 class TestShutdown:
     @pytest.mark.asyncio
     async def test_shutdown_stops_runner_and_closes_client(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL)
+        tools = FunPayTools(TEST_GKEY)
         tools.runner.is_running = True
         await tools.shutdown()
         assert tools.runner.is_running is False
@@ -67,14 +61,14 @@ class TestShutdown:
 
     @pytest.mark.asyncio
     async def test_shutdown_idempotent_when_already_closed(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL)
+        tools = FunPayTools(TEST_GKEY)
         await tools.shutdown()
         # повторный вызов не должен упасть
         await tools.shutdown()
 
     @pytest.mark.asyncio
     async def test_async_context_manager_calls_shutdown(self):
-        tools = FunPayTools(TEST_GKEY, TEST_GSEAL)
+        tools = FunPayTools(TEST_GKEY)
         async with tools as t:
             assert t is tools
         assert tools._client.is_closed is True
