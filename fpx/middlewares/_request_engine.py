@@ -37,8 +37,7 @@ class RequestEngine:
                 # флуд контрль
                 if response.status_code == 429:
                     if attempt == attempts - 1:
-                        # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-                        raise fpx_err.FpxRequestError(  # type: ignore[no-untyped-call]
+                        raise fpx_err.FpxRequestError(
                             message=f"Превышено кол-во попыток запроса (Flood/429) к {url}"
                         )
                     try:
@@ -56,8 +55,7 @@ class RequestEngine:
                     await asyncio.sleep(sleep_time)
                     continue
                 if response.url == "https://funpay.com/account/login":
-                    # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-                    raise fpx_err.FpxAuthError("Неверный gkey, обнови свои куки.")  # type: ignore[no-untyped-call]
+                    raise fpx_err.FpxAuthError("Неверный gkey, обнови свои куки.")
                 return response
             except httpx.ReadTimeout as e:
                 if method.upper() == "GET":
@@ -65,13 +63,11 @@ class RequestEngine:
                         raise e
                     await asyncio.sleep(backoff**attempt)
                 else:
-                    # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-                    raise fpx_err.FpxRequestError(  # type: ignore[no-untyped-call]
+                    raise fpx_err.FpxRequestError(
                         message=f"POST запрос упал по таймауту ответаВозможно действие выполнилось: {e}"
                     )
             except (httpx.ConnectTimeout, httpx.ConnectError) as e:
                 if attempt == attempts - 1:
                     raise e
                 await asyncio.sleep(backoff**attempt)
-        # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-        raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")  # type: ignore[no-untyped-call]
+        raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")
