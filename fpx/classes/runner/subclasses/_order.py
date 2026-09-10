@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Any
 
 from fpx.fsm import FSMContext
 from fpx.models.account import Order
@@ -8,10 +9,12 @@ logger = logging.getLogger("fpx.order_runner")
 
 
 class OrderRunner:
-    def __init__(self, runner):
+    def __init__(self, runner: Any) -> None:
+        # runner: Runner (см. fpx/classes/runner/runner.py). Оставлен как Any,
+        # так как сам класс Runner ещё не аннотирован (отдельная задача #17).
         self.runner = runner
 
-    async def _update_order_cache(self):
+    async def _update_order_cache(self) -> None:
         """
         Обновляет кеш заказов в раннере
         """
@@ -30,21 +33,21 @@ class OrderRunner:
         self.runner._cache["old_orders"] = self.runner._cache["orders"]
         self.runner._cache["orders"] = result
 
-    def _compare_order_cache(self):
+    def _compare_order_cache(self) -> list[Order]:
         """
         Сравнивает старый и новый кеш заказов
         """
-        result = []
+        result: list[Order] = []
         if self.runner._cache["orders"] != self.runner._cache["old_orders"]:
             for order in self.runner._cache["orders"]:
                 if order not in self.runner._cache["old_orders"]:
                     result.append(Order(**order))
         return result
 
-    async def _check_handler(self, handler, order, state_ctx):
+    async def _check_handler(self, handler: dict[str, Any], order: Order, state_ctx: FSMContext | None) -> bool:
         h_func = handler["function"]
         if handler.get("mapping") is not None:
-            msg_text = order.description.lower()
+            msg_text = order.description.lower() if order.description else ""
             matched = False
             for trigger in handler["mapping"]:
                 if trigger.lower() in msg_text:
@@ -56,7 +59,7 @@ class OrderRunner:
         await self.runner.router.invoke(h_func, order, state_ctx)
         return True
 
-    async def _check_trigger_for_command(self, order: Order, state_ctx: FSMContext | None):
+    async def _check_trigger_for_command(self, order: Order, state_ctx: FSMContext | None) -> bool:
         if order.description is None:
             return False
         for cmd_handler in self.runner.router._handlers["order_command"]:
@@ -74,7 +77,7 @@ class OrderRunner:
             return True
         return False
 
-    async def _trigger_order_handlers(self, order: Order):
+    async def _trigger_order_handlers(self, order: Order) -> None:
         state_ctx = FSMContext(self.runner.storage, order.chat_id) if order.chat_id else None
         status = order.status.lower() if order.status else order.status
         for handler in self.runner.router._handlers["order"]:
@@ -95,7 +98,7 @@ class OrderRunner:
                 if await self._check_handler(handler, order, state_ctx):
                     pass
 
-    async def _process_single_order(self, order: Order):
+    async def _process_single_order(self, order: Order) -> None:
         try:
             order_info = await self.runner._account.order.get_order_details(order.order_id)
             order.description = order_info.description
@@ -106,7 +109,7 @@ class OrderRunner:
             logger.debug(f"В процессе обработки заказа произошла ошибка: {e}. Убедитесь что всё хорошо", exc_info=True)
             await self.runner._handle_error(event=order, exception=e)
 
-    async def _check_orders(self):
+    async def _check_orders(self) -> None:
         await self._update_order_cache()
         orders = self._compare_order_cache()
         if orders:
