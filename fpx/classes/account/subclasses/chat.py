@@ -33,8 +33,7 @@ class ChatManager:
             step = "парсинг данных чатов"
             chats = self._account._parser.parse_chats_list(html)
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}")
         return cast(list[Chat], chats)
 
     async def send_message(self, chat_id: str, text: str, with_nodes: bool = False) -> dict[str, Any]:
@@ -62,15 +61,13 @@ class ChatManager:
                 self._account.data._node_names[chat_id], -1, text
             )
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
         if response.get("error") is None:
             return cast(dict[str, Any], response)
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxMessageDeliverError(  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxMessageDeliverError(
                 f"Сервер вернул ошибку: {error_code} - {error_msg}"
             )
 
@@ -100,8 +97,7 @@ class ChatManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_chat(html)
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}")
         good_msg_list: list[Message] = []
         if data.get("messages"):
             message_list = []
@@ -158,14 +154,12 @@ class ChatManager:
                 self._account.data._node_names[chat_id], -1, image_id
             )
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
         if response.get("error") is None:
             return cast(dict[str, Any], response)
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxMessageDeliverError(  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxMessageDeliverError(
                 f"Сервер вернул ошибку: {error_code} - {error_msg}"
             )

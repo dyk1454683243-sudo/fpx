@@ -40,8 +40,7 @@ class OrderManager:
                 chat_id=data["chat_id"],
             )
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}")
         return order
 
     async def find_orders_by_buyer_name(
@@ -111,8 +110,7 @@ class OrderManager:
                     order.description = full_order.description
                     order.review = full_order.review
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}")
         return good_orders
 
     async def refund_order(self, order_id: str | int) -> bool | None:
@@ -133,8 +131,7 @@ class OrderManager:
             status = s.status
             if status == "Возврат":
                 return True
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxRefundError(  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxRefundError( 
                 f"Невозможно сделать возврат, текущий статус: {status}"
             )
         return None

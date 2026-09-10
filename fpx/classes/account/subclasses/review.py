@@ -46,15 +46,12 @@ class ReviewManager:
         try:
             response = r.json()
         except json.JSONDecodeError:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего")
         try:
             if text in response["content"]:
                 return True
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")
         except Exception:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxAnswerReviewError(  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxAnswerReviewError(
                 message=response.get("msg") if response.get("msg") else response
             )

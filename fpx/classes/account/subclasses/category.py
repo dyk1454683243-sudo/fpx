@@ -34,8 +34,7 @@ class CategoryManager:
             stage = "парсингa данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxGetLastCategoryLotError(  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxGetLastCategoryLotError(
                 f"При выполнении {stage} произошла ошибка: {e}"
             )
         result: list[CategoryLastLot] = []
@@ -66,8 +65,7 @@ class CategoryManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxGetLastCategoryLotError(  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxGetLastCategoryLotError(
                 f"При выполнении {stage} произошла ошибка: {e}"
             )
         result: list[CategoryLastLot] = []
@@ -96,8 +94,7 @@ class CategoryManager:
             html = await self._account._client.get_main_menu()
             data = self._account._parser.parse_all_categories(html)
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
         return cast(list[Game], data)
 
     async def find_category(self, target: str) -> list[Game]:
@@ -127,6 +124,5 @@ class CategoryManager:
             html = await self._account._client.find_category(target)
             data = self._account._parser.parse_all_categories(html["html"])
         except Exception as e:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
         return cast(list[Game], data)
