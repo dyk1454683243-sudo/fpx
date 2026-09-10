@@ -1,17 +1,23 @@
 import asyncio
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from fpx.utils import errors as fpx_err
 
+if TYPE_CHECKING:
+    from fpx.classes.runner.runner import Runner
+
 
 class RequestEngine:
-    def __init__(self, account, client: httpx.AsyncClient):
+    def __init__(self, account: Any, client: httpx.AsyncClient) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
         self._client = client
-        self.runner = None
+        self.runner: "Runner | None" = None
 
-    async def execute(self, method: str, url: str, **kwargs):
+    async def execute(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         attempts = 3
         backoff = 1.5  # множитель времени ожидания
         if method.upper() in ("POST", "PUT", "DELETE"):
@@ -31,7 +37,10 @@ class RequestEngine:
                 # флуд контрль
                 if response.status_code == 429:
                     if attempt == attempts - 1:
-                        raise fpx_err.FpxRequestError(message=f"Превышено кол-во попыток запроса (Flood/429) к {url}")
+                        # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+                        raise fpx_err.FpxRequestError(  # type: ignore[no-untyped-call]
+                            message=f"Превышено кол-во попыток запроса (Flood/429) к {url}"
+                        )
                     try:
                         sleep_time = int(response.headers.get("Retry-After", 5))
                     except (ValueError, TypeError):
@@ -47,7 +56,8 @@ class RequestEngine:
                     await asyncio.sleep(sleep_time)
                     continue
                 if response.url == "https://funpay.com/account/login":
-                    raise fpx_err.FpxAuthError("Неверный gkey, обнови свои куки.")
+                    # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+                    raise fpx_err.FpxAuthError("Неверный gkey, обнови свои куки.")  # type: ignore[no-untyped-call]
                 return response
             except httpx.ReadTimeout as e:
                 if method.upper() == "GET":
@@ -55,11 +65,13 @@ class RequestEngine:
                         raise e
                     await asyncio.sleep(backoff**attempt)
                 else:
-                    raise fpx_err.FpxRequestError(
+                    # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+                    raise fpx_err.FpxRequestError(  # type: ignore[no-untyped-call]
                         message=f"POST запрос упал по таймауту ответаВозможно действие выполнилось: {e}"
                     )
             except (httpx.ConnectTimeout, httpx.ConnectError) as e:
                 if attempt == attempts - 1:
                     raise e
                 await asyncio.sleep(backoff**attempt)
-        raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")
+        # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+        raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")  # type: ignore[no-untyped-call]

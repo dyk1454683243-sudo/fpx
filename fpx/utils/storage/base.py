@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class BaseStorage:
     async def set_state(self, chat_id: str | int, state: str | None) -> None:
         """Задаёт стейт"""
@@ -7,11 +10,11 @@ class BaseStorage:
         """Находит состояние"""
         raise NotImplementedError()
 
-    async def update_data(self, chat_id: str | int, **kwargs) -> None:
+    async def update_data(self, chat_id: str | int, **kwargs: Any) -> None:
         """Обновляет данные состояния (принимает kwargs)"""
         raise NotImplementedError()
 
-    async def get_data(self, chat_id: str | int) -> dict:
+    async def get_data(self, chat_id: str | int) -> dict[str, Any]:
         """Забирает данные состояния"""
         raise NotImplementedError()
 
