@@ -11,33 +11,21 @@ from fpx.fsm import BaseStorage, MemoryStorage
 from fpx.utils.errors import FpxAuthError
 
 GKEY_PATTERN = re.compile(r"^[a-z0-9]{32}$")
-GSEAL_PATTERN = re.compile(r"^v1\.[a-f0-9]{64}\.[a-f0-9]{32}\.\d+\.k\d+\.[a-f0-9]{64}$")
 
 
 class FunPayTools:
     def __init__(
         self,
         gkey: str,
-        gseal: str | None = None,
         storage: BaseStorage | None = None,
         proxy: str | httpx.Proxy | None = None,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
-        if gseal or gseal is None:
-            print(
-                "ВАЖНО: С выхода релиза 0.8.0 аргумент gseal будет удалён, теперь он подставляется "
-                "автоматически, просьба не передавать аргумент gseal во избежание проблем."
-            )
         if not gkey:
-            raise FpxAuthError("gkey и gseal не могут быть None.")
+            raise FpxAuthError("gkey не может быть None.")
         if not GKEY_PATTERN.match(gkey):
             raise FpxAuthError("Неверный формат gkey, перепроверь его.")
-        if gseal:
-            if not GSEAL_PATTERN.match(gseal):
-                raise FpxAuthError("Неверный формат gseal, перепроверь его.")
         self._cookies = {"golden_key": gkey, "locale": "ru"}
-        if gseal:
-            self._cookies["golden_seal"] = gseal
         self._headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
             "Accept-Language": "ru-RU,ru;q=0.9",

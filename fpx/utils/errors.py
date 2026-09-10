@@ -49,13 +49,6 @@ class FpxRefreshCookieError(FpxAccountError):
         super().__init__(message)
 
 
-class FpxAbsentGoldenSeal(FpxAccountError):
-    """Для POST запроса обязателен gseal."""
-
-    def __init__(self, message: str = "Для POST запроса обязателен gseal.") -> None:
-        super().__init__(message)
-
-
 class FpxValidateError(FpxAccountError):
     """Неверный объект"""
 
