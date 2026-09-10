@@ -1,12 +1,17 @@
+from typing import Any
+
 from fpx.models.lots import CurrentLotInfo, FieldOptions, LotCreationFields, LotEditor, LotField
 from fpx.utils import errors as fpx_err
 
 
 class LotManager:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как типизация здесь через реальный класс Account создала бы
+        # циклический импорт (Account -> LotManager -> Account).
         self._account = account
 
-    async def _get_lot_editor_details(self, lot_id):
+    async def _get_lot_editor_details(self, lot_id: int | str) -> LotEditor:
         """
         Не для обычного использования! (функция для изменения лота)
         Получает данные для изменения лота с https://funpay.com/lots/offerEdit?offer={lot_id}.
@@ -38,7 +43,7 @@ class LotManager:
         lot = LotEditor(**main_data, fields=other_fields)
         return lot
 
-    async def get_lot_secrets(self, lot_id: int | str):
+    async def get_lot_secrets(self, lot_id: int | str) -> list[str]:
         """
         Запрос данных автовыдачи лота.
 
@@ -54,9 +59,9 @@ class LotManager:
             data = await self._get_lot_editor_details(lot_id)
         except Exception as e:
             raise fpx_err.FpxGetLotInfoError(f"При {stage} произошла ошибка: {e}")
-        return data.fields["secrets"].split("\n")
+        return str(data.fields["secrets"]).split("\n")
 
-    async def get_lot_info(self, lot_id):
+    async def get_lot_info(self, lot_id: int | str) -> CurrentLotInfo:
         """
         Собирает данные лота.
 
@@ -77,14 +82,17 @@ class LotManager:
             data = self._account._parser.parse_current_lot_menu(html)
             stage = "типизации данных"
             lot = CurrentLotInfo(
-                id=lot_id, short_desc=data["short_desc"], description=data["description"], price=float(data["price"])
+                id=str(lot_id),
+                short_desc=data["short_desc"],
+                description=data["description"],
+                price=float(data["price"]),
             )
             lot._client = self._account
         except Exception as e:
             raise fpx_err.FpxGetLotInfoError(f"При выполнении {stage} произошла ошибка: {e}")
         return lot
 
-    async def raise_lots(self):
+    async def raise_lots(self) -> list[Any]:
         """
         Поднимает все лоты.
 
@@ -108,7 +116,7 @@ class LotManager:
         except Exception as e:
             raise fpx_err.FpxRaisingLotError(message=str(e))
 
-    async def get_node_editor_data(self, node_id: int | str):
+    async def get_node_editor_data(self, node_id: int | str) -> LotCreationFields:
         """
         Запрос нужных филдов для создания лота
 
@@ -130,10 +138,10 @@ class LotManager:
             raise fpx_err.FpxGetLotEditorInfoError(f"При выполнении {stage} произошла ошибка: {e}")
         base_fields = ["csrf_token", "form_created_at", "offer_id", "node_id", "location", "deleted"]
         main_data = {f"_{k}": v for k, v in data.items() if k in base_fields}
-        other_fields = []
+        other_fields: list[LotField] = []
         for k, v in data.items():
             if k not in base_fields:
-                field_options = None
+                field_options: list[FieldOptions] | None = None
                 if v:
                     field_options = []
                     for option in v:
@@ -142,7 +150,7 @@ class LotManager:
         lot = LotCreationFields(fields=other_fields, **main_data)
         return lot
 
-    async def create_lot(self, lot_creation_fields: LotCreationFields):
+    async def create_lot(self, lot_creation_fields: LotCreationFields) -> bool:
         """
         Создание лота.
         Args:
