@@ -1,14 +1,17 @@
 import json
+from typing import Any
 
 from fpx.models.account import Review
 from fpx.utils import errors as fpx_err
 
 
 class ReviewManager:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
 
-    async def get_review(self, order_id):
+    async def get_review(self, order_id: str | int) -> Review:
         """
         Забирает отзыв от заказа.
 
@@ -25,7 +28,7 @@ class ReviewManager:
         review = Review(text=rev.get("text"), stars=rev.get("stars"), answer=rev.get("answer"))
         return review
 
-    async def review_answer(self, order_id, text):
+    async def review_answer(self, order_id: str | int, text: str) -> bool:
         """
         Отвечает на отзыв, оставленный покупателем.
 
@@ -43,10 +46,15 @@ class ReviewManager:
         try:
             response = r.json()
         except json.JSONDecodeError:
-            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего")  # type: ignore[no-untyped-call]
         try:
             if text in response["content"]:
                 return True
-            raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")  # type: ignore[no-untyped-call]
         except Exception:
-            raise fpx_err.FpxAnswerReviewError(message=response.get("msg") if response.get("msg") else response)
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxAnswerReviewError(  # type: ignore[no-untyped-call]
+                message=response.get("msg") if response.get("msg") else response
+            )

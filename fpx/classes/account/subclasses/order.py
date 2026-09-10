@@ -1,12 +1,16 @@
+from typing import Any
+
 from fpx.models.account import Order
 from fpx.utils import errors as fpx_err
 
 
 class OrderManager:
-    def __init__(self, account):
+    def __init__(self, account: Any) -> None:
+        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
+        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
 
-    async def get_order_details(self, order_id):
+    async def get_order_details(self, order_id: str | int) -> Order:
         """
         Функция запрашивает детали заказа из /orders/{order_id}/.
 
@@ -29,14 +33,15 @@ class OrderManager:
             data = self._account._parser.parse_order_page(html)
             stage = "типизации данныз"
             order = Order(
-                order_id=order_id,
+                order_id=str(order_id),
                 status=data["status"],
                 review=data["review"],
                 description=data.get("desc"),
                 chat_id=data["chat_id"],
             )
         except Exception as e:
-            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}")  # type: ignore[no-untyped-call]
         return order
 
     async def find_orders_by_buyer_name(
@@ -45,7 +50,7 @@ class OrderManager:
         order_name: str | None = None,
         search_mode: str = "partial",  # 'exact' полное совпадение, 'partial' по части, 'keywords' по словам
         full_info: bool = True,
-    ):
+    ) -> list[Order]:
         """
         Ищет все заказы по имени покупателя или названию заказа,
             или по названию заказа и имени покупателя.
@@ -79,9 +84,9 @@ class OrderManager:
             FpxGetOrderInfoError: Ошибка запроса данных заказа
         """
         stage = "запросе данных"
+        good_orders: list[Order] = []
         try:
             orders = await self._account.profile.get_my_sells()
-            good_orders = []
             for order in orders:
                 checks = []
                 if buyer_name is not None:
@@ -100,15 +105,17 @@ class OrderManager:
                 good_orders = []
             if full_info is True:
                 for order in good_orders:
+                    assert order.order_id is not None, "order_id не может быть None для существующего заказа"
                     full_order = await self.get_order_details(order.order_id)
                     order.chat_id = full_order.chat_id
                     order.description = full_order.description
                     order.review = full_order.review
         except Exception as e:
-            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}")  # type: ignore[no-untyped-call]
         return good_orders
 
-    async def refund_order(self, order_id):
+    async def refund_order(self, order_id: str | int) -> bool | None:
         """
         Делает возврат заказа.
 
@@ -126,4 +133,8 @@ class OrderManager:
             status = s.status
             if status == "Возврат":
                 return True
-            raise fpx_err.FpxRefundError(f"Невозможно сделать возврат, текущий статус: {status}")
+            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
+            raise fpx_err.FpxRefundError(  # type: ignore[no-untyped-call]
+                f"Невозможно сделать возврат, текущий статус: {status}"
+            )
+        return None
