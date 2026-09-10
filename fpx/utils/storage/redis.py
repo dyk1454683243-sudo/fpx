@@ -1,4 +1,5 @@
 import json
+from typing import Any, cast
 
 from .base import BaseStorage
 
@@ -11,9 +12,13 @@ class RedisStorage(BaseStorage):
     Для высоких нагрузок используйте Redis Lua-скрипты.
     """
 
-    def __init__(self, url: str = "redis://localhost:6379", prefix: str = "fpx"):
+    def __init__(self, url: str = "redis://localhost:6379", prefix: str = "fpx") -> None:
         try:
-            from redis.asyncio import Redis  # type: ignore[import-untyped]
+            # Redis - опциональная зависимость (extra "redis"), поэтому код ошибки
+            # может отличаться в зависимости от того, установлен ли пакет:
+            # import-not-found, если пакет не установлен вовсе, или import-untyped,
+            # если установлен, но без разметки типов. Игнорируем оба случая.
+            from redis.asyncio import Redis  # type: ignore
         except ImportError:
             raise ImportError("Redis не установлен. Установи: pip install fpx-engine[redis]")
         self._redis = Redis.from_url(url, decode_responses=True)
@@ -22,7 +27,7 @@ class RedisStorage(BaseStorage):
     def _key(self, chat_id: str) -> str:
         return f"{self._prefix}:fsm:{chat_id}"
 
-    async def set_state(self, chat_id: str | int, state: str | None):
+    async def set_state(self, chat_id: str | int, state: str | None) -> None:
         key = self._key(str(chat_id))
         data = await self.get_data(chat_id)
         await self._redis.set(key, json.dumps({"state": state, "data": data}))
@@ -31,9 +36,9 @@ class RedisStorage(BaseStorage):
         raw = await self._redis.get(self._key(str(chat_id)))
         if not raw:
             return None
-        return json.loads(raw).get("state")
+        return cast(str | None, json.loads(raw).get("state"))
 
-    async def update_data(self, chat_id: str | int, **kwargs):
+    async def update_data(self, chat_id: str | int, **kwargs: Any) -> None:
         """Обновляет данные для чата.
 
         Warning: НЕ потокобезопасно. Если два хендлера
@@ -46,11 +51,11 @@ class RedisStorage(BaseStorage):
         state = await self.get_state(chat_id)
         await self._redis.set(key, json.dumps({"state": state, "data": current}))
 
-    async def get_data(self, chat_id: str | int) -> dict:
+    async def get_data(self, chat_id: str | int) -> dict[str, Any]:
         raw = await self._redis.get(self._key(str(chat_id)))
         if not raw:
             return {}
-        return json.loads(raw).get("data", {})
+        return cast(dict[str, Any], json.loads(raw).get("data", {}))
 
-    async def clear_state(self, chat_id: str | int):
+    async def clear_state(self, chat_id: str | int) -> None:
         await self._redis.delete(self._key(str(chat_id)))

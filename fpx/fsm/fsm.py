@@ -1,3 +1,5 @@
+from typing import Any
+
 from fpx.utils.storage.base import BaseStorage
 
 
@@ -6,17 +8,17 @@ class FSMContext:
         self.storage = storage
         self.chat_id = str(chat_id)
 
-    async def set_state(self, state: str | None):
+    async def set_state(self, state: str | None) -> None:
         await self.storage.set_state(self.chat_id, state)
 
     async def get_state(self) -> str | None:
         return await self.storage.get_state(self.chat_id)
 
-    async def update_data(self, **kwargs):
+    async def update_data(self, **kwargs: Any) -> None:
         await self.storage.update_data(self.chat_id, **kwargs)
 
-    async def get_data(self) -> dict:
+    async def get_data(self) -> dict[str, Any]:
         return await self.storage.get_data(self.chat_id)
 
-    async def clear_state(self):
+    async def clear_state(self) -> None:
         await self.storage.clear_state(self.chat_id)
