@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 import logging
 import re
 from typing import Any
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from fpx.models.chat import Chat
 from fpx.utils import errors as fpx_err
@@ -18,21 +20,21 @@ class ChatParser(BaseParser):
     def parse_chats_list(cls, html_content: str) -> list[Chat]:
         """Парсит страницу https://funpay.com/chat/"""
         soup = BeautifulSoup(html_content, "html.parser")
-        items = soup.find_all("a", class_="contact-item")
+        items: list[Tag] = soup.find_all("a", class_="contact-item")
         if not items:
             items = cls._safe_parse_links(html_content, r"node=\d+")
         if not items:
             raise fpx_err.FpxNullDataError("На странице не найдено ни одного чата")
-        chats = []
+        chats: list[Chat] = []
         for item in items:
             try:
-                href = str(item.get("href", ""))
-                node_msg_id = int(str(item.get("data-node-msg", "0")))
+                href = cls._get_str_attr(item, "href")
+                node_msg_id = int(cls._get_str_attr(item, "data-node-msg", "0"))
                 chat_id = href.split("node=")[-1] if "node=" in href else ""
                 username = cls.clean_text(item.find("div", class_="media-user-name"))
                 last_msg = cls.clean_text(item.find("div", class_="contact-item-message"))
                 date = cls.clean_text(item.find("div", class_="contact-item-time"))
-                is_unread = "unread" in (item.get("class", "") or [])
+                is_unread = "unread" in cls._get_class_list(item)
                 chats.append(
                     Chat(
                         id=chat_id,
@@ -54,7 +56,7 @@ class ChatParser(BaseParser):
         return chats
 
     @classmethod
-    def parse_chat(cls, html_content: str):
+    def parse_chat(cls, html_content: str) -> dict[str, Any]:
         """Парсит страницу https://funpay.com/chat/?node=..."""
         soup = BeautifulSoup(html_content, "html.parser")
         result: dict[str, Any] = {}
@@ -69,35 +71,38 @@ class ChatParser(BaseParser):
         if chats:
             for chat in chats:
                 try:
-                    res: dict[str, Any] = {"is_system": False, "node_id": chat.get("id").split("-")[-1]}
+                    res: dict[str, Any] = {
+                        "is_system": False,
+                        "node_id": cls._get_str_attr(chat, "id").split("-")[-1],
+                    }
                     msg_tag = chat.find("div", class_="chat-msg-text")
                     if msg_tag:
-                        message = msg_tag.get_text(separator="\n").strip() if msg_tag else ""
+                        message = msg_tag.get_text(separator="\n").strip()
                         if not message:
                             img_link = msg_tag.find("a", class_="chat-img-link")
-                            message = img_link.get("href", "") if img_link else ""  # type: ignore[assignment]
+                            message = cls._get_str_attr(img_link, "href") if img_link else ""
                         res["message"] = message
                     else:
                         res["message"] = ""
-                    author_block = None
-                    current_node = chat
+                    author_block: Tag | None = None
+                    current_node: Tag | None = chat
                     while current_node:
                         author_block = current_node.find("div", class_="media-user-name")
                         if author_block:
                             break
-                        current_node = current_node.find_previous_sibling("div", class_="chat-msg-item")  # type: ignore[assignment]
+                        current_node = current_node.find_previous_sibling("div", class_="chat-msg-item")
                     if author_block:
                         author = author_block.find("a", class_="chat-msg-author-link")
                         if not author:
                             sender_lbl = author_block.find("span", class_="chat-msg-author-label")
                             res["sender"] = cls.clean_text(sender_lbl) if sender_lbl else "FunPay"
                             if res["sender"] and res["sender"].lower() == "оповещение":
-                                res["sender"] = "FunPay"  # type: ignore[assignment]
+                                res["sender"] = "FunPay"
                                 res["is_system"] = True
                         else:
-                            res["sender"] = author.get_text(strip=True)  # type: ignore[assignment]
+                            res["sender"] = author.get_text(strip=True)
                     else:
-                        res["sender"] = "Unknown"  # type: ignore[assignment]
+                        res["sender"] = "Unknown"
                     result["messages"].append(res)
                 except Exception as e:
                     logger.debug(f"Не удалось распарсить N сообщение в чате: {e}")
@@ -105,8 +110,8 @@ class ChatParser(BaseParser):
             logger.debug("Сообщений не найдено!")
             # парсинг тех.данных
         try:
-            result["data-name"] = chat_div.get("data-name", "")  # type: ignore[assignment]
-            app_data_str = str(body.get("data-app-data", "{}") or "{}")
+            result["data-name"] = cls._get_str_attr(chat_div, "data-name")
+            app_data_str = cls._get_str_attr(body, "data-app-data", "{}") or "{}"
             app_data = json.loads(app_data_str)
             result["csrf-token"] = app_data.get("csrf-token", "")
             result["user-id"] = app_data.get("userId", "")
