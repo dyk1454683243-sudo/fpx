@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import json
 import logging
 import re
+from typing import Any
 
 from bs4 import BeautifulSoup
 
@@ -14,7 +17,7 @@ logger = logging.getLogger("fpx.profile_parser")
 
 class ProfileParser(BaseParser):
     @classmethod
-    def parse_finanses(cls, html_content: str):
+    def parse_finanses(cls, html_content: str) -> Balance:
         """Парсит https://funpay.com/account/balance"""
         soup = BeautifulSoup(html_content, "html.parser")
         balances_container = soup.find("span", class_="balances-list")
@@ -24,7 +27,7 @@ class ProfileParser(BaseParser):
         if not values:
             raise fpx_err.FpxNullDataError("На странице финансов не найдено баланса")
         clean_values = [cls.clean_text(v) for v in values]
-        data = {}
+        data: dict[str, float] = {}
         for i in clean_values:
             try:
                 value = i.replace("₽", "").replace("$", "").replace("€", "").replace(",", ".").strip()
@@ -45,7 +48,7 @@ class ProfileParser(BaseParser):
         return Balance(**data)
 
     @classmethod
-    def parse_profile(cls, html_content: str):
+    def parse_profile(cls, html_content: str) -> dict[str, Any]:
         """Парсит https://funpay.com/users/.../"""
         soup = BeautifulSoup(html_content, "html.parser")
         offer_list = soup.find_all("div", class_="offer") or soup.find_all("div", attrs={"data-id": True})
@@ -57,8 +60,8 @@ class ProfileParser(BaseParser):
                 "На странице профиля не найден блок категорий или блок отзывов."
                 "Возможно ошибка или их просто не существует"
             )
-        category_ids = set()
-        lots = []
+        category_ids: set[str] = set()
+        lots: list[dict[str, str]] = []
         for offer in offer_list:
             links = offer.find_all("a", href=True)
             if not links:
@@ -80,17 +83,17 @@ class ProfileParser(BaseParser):
                     continue
         if not lots:
             logger.debug("Не удалось распарсить ни один лот. Возможно изменилась вёрстка/у вас просто нет лотов.")
-        reviews = []
+        reviews: list[dict[str, Any]] = []
         for review in review_list:
             try:
-                rev: dict = {}
+                rev: dict[str, Any] = {}
                 text_tag = review.find("div", class_="review-item-text") or review.find("div")
                 rev["text"] = cls.clean_text(text_tag)
                 rate_div = review.find("div", class_="rating")
                 if rate_div:
                     inner_div = rate_div.find("div", class_=True)
                     if inner_div:
-                        classes_str = "".join(inner_div["class"])
+                        classes_str = cls._get_str_attr(inner_div, "class")
                         match = re.search(r"\d+", classes_str)
                         rev["stars"] = int(match.group()) if match else 0
                     else:
@@ -104,10 +107,7 @@ class ProfileParser(BaseParser):
                 order_div = review.find("div", class_="review-item-order")
                 if order_div:
                     a_tag = order_div.find("a", href=True)
-                    if a_tag and not isinstance(a_tag, str):
-                        rev["order_id"] = str(a_tag["href"].strip("/").split("/")[-1])  # type: ignore[union-attr]
-                    else:
-                        rev["order_id"] = ""
+                    rev["order_id"] = cls._get_str_attr(a_tag, "href").strip("/").split("/")[-1] if a_tag else ""
                 else:
                     rev["order_id"] = ""
                 reviews.append(rev)
@@ -119,9 +119,9 @@ class ProfileParser(BaseParser):
         return {"category-ids": list(category_ids), "lots": lots, "reviews": reviews}
 
     @classmethod
-    def parse_my_sells(cls, html_content):
+    def parse_my_sells(cls, html_content: str) -> dict[str, Any]:
         """Парсит https://funpay.com/orders/trade"""
-        result = {}
+        result: dict[str, Any] = {}
         result["sells"] = []
         soup = BeautifulSoup(html_content, "html.parser")
         tc_items = soup.find_all("a", class_="tc-item")
@@ -131,7 +131,7 @@ class ProfileParser(BaseParser):
             raise fpx_err.FpxNullDataError("На странице продаж не найдено объектов(tc-item)")
         for item in tc_items:
             try:
-                pre_result = {}
+                pre_result: dict[str, Any] = {}
                 order_tag = item.find("div", class_="tc-order") or item.find("div", class_=lambda c: c and "order" in c)
                 pre_result["order-id"] = order_tag.get_text(strip=True).replace("#", "") if order_tag else "Unknown"
                 time_tag = item.find("div", class_="tc-date-time")
@@ -153,7 +153,7 @@ class ProfileParser(BaseParser):
                     pre_result["price"] = 0.0
                 order_desc = item.find("div", class_="order-desc")
                 if order_desc:
-                    divs = order_desc.find_all(["div", "span", "p"], recursive=False)
+                    divs: list[Any] = order_desc.find_all(["div", "span", "p"], recursive=False)
                     if not divs:
                         divs = [order_desc]
                     raw_name = divs[0].get_text(strip=True) if len(divs) > 0 else "Unknown"
@@ -184,19 +184,20 @@ class ProfileParser(BaseParser):
             raise fpx_err.FpxParseError("При парсинге не найдено ни одной продажи")
         form_class = soup.find("form", class_="dyn-table-form")
         if form_class:
-            result["next_page"] = form_class.find("input").get("value")
+            input_tag = form_class.find("input")
+            result["next_page"] = cls._get_str_attr(input_tag, "value") if input_tag else None
         return result
 
     @classmethod
-    def parse_main_menu(cls, html_content: str):
+    def parse_main_menu(cls, html_content: str) -> dict[str, Any]:
         """Парсит funpay.com"""
         soup = BeautifulSoup(html_content, "html.parser")
         user_link = soup.find("a", class_="user-link-dropdown")
         if not user_link:
             user_link = soup.find("a", href=lambda h: h and "/users/" in h)
-        result = {}
+        result: dict[str, Any] = {}
         if user_link:
-            href = str(user_link.get("href", ""))
+            href = cls._get_str_attr(user_link, "href")
             user_id = href.strip("/").split("/")[-1] if href else None
             if user_id and user_id.isdigit():
                 result["user-id"] = user_id
@@ -212,8 +213,8 @@ class ProfileParser(BaseParser):
         if not body:
             raise fpx_err.FpxNullDataError("Тело главной страницы (body) не найдено")
         try:
-            app_data_str = body.get("data-app-data", "{}")
-            app_data = json.loads(str(app_data_str))
+            app_data_str = cls._get_str_attr(body, "data-app-data", "{}")
+            app_data = json.loads(app_data_str)
             result["csrf-token"] = app_data.get("csrf-token", "")
         except Exception:
             raise fpx_err.FpxParseError("Не удалось распарсить csrf_token из data-app-data.")

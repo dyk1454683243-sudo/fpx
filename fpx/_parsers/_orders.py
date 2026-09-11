@@ -1,6 +1,9 @@
-import logging
+from __future__ import annotations
 
-from bs4 import BeautifulSoup
+import logging
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from fpx.utils import errors as fpx_err
 
@@ -11,24 +14,32 @@ logger = logging.getLogger("fpx.order_parser")
 
 class OrderParser(BaseParser):
     @classmethod
-    def parse_order_page(cls, html_content):
+    def parse_order_page(cls, html_content: str) -> dict[str, Any]:
         """Парсит https://funpay.com/orders/.../"""
         soup = BeautifulSoup(html_content, "html.parser")
-        result = {}
+        result: dict[str, Any] = {}
         result["review"] = {}
         try:
             languages = ["подробное описание", "detailed description", "докладний опис"]
-            desc_h5 = soup.find("h5", string=lambda text: text and any(lang in text.lower() for lang in languages))
+            # Раньше это было soup.find("h5", string=lambda ...) — совмещение name= и
+            # string=<callable> не разрешается перегрузками find() (см. #15), поэтому
+            # фильтруем руками по .string, что эквивалентно по поведению.
+            desc_h5: Tag | None = None
+            for h5 in soup.find_all("h5"):
+                text = h5.string
+                if text and any(lang in text.lower() for lang in languages):
+                    desc_h5 = h5
+                    break
             if desc_h5:
                 desc_div = desc_h5.find_next(["div", "p", "span"])
                 if desc_div:
                     result["desc"] = desc_div.get_text(separator="\n").strip()
             chat_link = soup.select_one("div.chat-float[data-id]")
             if chat_link:
-                result["chat_id"] = chat_link.get("data-id", "")
+                result["chat_id"] = cls._get_str_attr(chat_link, "data-id")
             else:
                 chat_link = soup.select_one('div[data-id][data-name*="users-"]')
-                result["chat_id"] = chat_link.get("data-id", "") if chat_link else None
+                result["chat_id"] = cls._get_str_attr(chat_link, "data-id") if chat_link else None
             header = soup.find("h1", class_="page-header") or soup.find("h1")
             if not header:
                 raise fpx_err.FpxNullDataError(
@@ -55,7 +66,7 @@ class OrderParser(BaseParser):
                 try:
                     text_tag = review_container.find("div", class_="review-item-text") or review_container.find("div")
                     result["review"]["text"] = text_tag.get_text(strip=True) if text_tag else ""
-                    raw_stars = review_container.get("data-rating", "0")
+                    raw_stars = cls._get_str_attr(review_container, "data-rating", "0")
                     result["review"]["stars"] = int(raw_stars) if raw_stars.isdigit() else 0
                     answer_div = review_container.find("div", class_="review-item-answer")
                     if answer_div:
@@ -81,22 +92,24 @@ class OrderParser(BaseParser):
         return result
 
     @classmethod
-    def parse_category_page(cls, html_content):
+    def parse_category_page(cls, html_content: str) -> list[dict[str, Any]]:
         """Парсит https://funpay.com/lots/.../"""
         soup = BeautifulSoup(html_content, "html.parser")
-        lowcoasters = {}
+        lowcoasters: dict[str, dict[str, Any]] = {}
         buttons = soup.select("div.lot-field-radio-box button")
         if not buttons:
             buttons = [btn for btn in soup.find_all("button") if btn.get("value") and btn.get("value") != "Все"]
         filters = [
-            btn.get("value").strip().lower() for btn in buttons if btn.get("value") and btn.get("value") != "Все"
+            value.strip().lower()
+            for btn in buttons
+            if (value := cls._get_str_attr(btn, "value")) and value != "Все"
         ]
         lots = soup.select("a.tc-item:not(.offer-promo)")
         if not lots:
             lots = [
                 a
                 for a in soup.find_all("a", href=lambda h: h and "/lots/offers/" in h)
-                if "promo" not in "".join(a.get("class", [])).lower()
+                if "promo" not in "".join(cls._get_class_list(a)).lower()
             ]
         if not lots:
             logger.debug("В категории не найдено лотов, возможно их просто нет или страница сломалась")
@@ -105,7 +118,7 @@ class OrderParser(BaseParser):
             try:
                 lot = lots[0]
                 price_div = lot.find("div", class_="tc-price") or lot.find("div", attrs={"data-s": True})
-                lot_price = float(price_div.get("data-s", 0)) if price_div else 0.0
+                lot_price = float(cls._get_str_attr(price_div, "data-s", "0")) if price_div else 0.0
                 if lot_price in (1.0, 0.0) or not price_div:
                     target_div = price_div or lot
                     raw_text = target_div.get_text(strip=True).replace(",", ".")
@@ -113,7 +126,7 @@ class OrderParser(BaseParser):
                     lot_price = float(cleaned) if cleaned else 0.0
                 username_el = lot.find("span", class_="pseudo-a") or lot.select_one(".media-user-name span")
                 owner_username = username_el.get_text(strip=True) if username_el else "Unknown"
-                url = lot.get("href", "")
+                url = cls._get_str_attr(lot, "href")
                 offer_id = url.split("=")[-1] if "=" in url else url.rstrip("/").split("/")[-1]
                 return [
                     {"filtration": "все", "price": lot_price, "offer_id": offer_id, "owner_username": owner_username}
@@ -121,12 +134,12 @@ class OrderParser(BaseParser):
             except Exception:
                 raise fpx_err.FpxParseError("Не удалось распарсить категорию без фильтров.")
         for lot in lots:
-            lot_f_values = [val.strip().lower() for key, val in lot.attrs.items() if key.startswith("data-f-")]
+            lot_f_values = [str(val).strip().lower() for key, val in lot.attrs.items() if key.startswith("data-f-")]
             for f in filters:
                 if f in lot_f_values:
                     try:
                         price_div = lot.find("div", class_="tc-price") or lot.find("div", attrs={"data-s": True})
-                        lot_price = float(price_div.get("data-s", 0)) if price_div else 0.0
+                        lot_price = float(cls._get_str_attr(price_div, "data-s", "0")) if price_div else 0.0
                         if lot_price in (1.0, 0.0) or not price_div:
                             target_div = price_div or lot
                             raw_text = target_div.get_text(strip=True).replace(",", ".")
@@ -135,7 +148,7 @@ class OrderParser(BaseParser):
                         if f not in lowcoasters or lot_price < lowcoasters[f]["price"]:
                             username_el = lot.find("span", class_="pseudo-a") or lot.select_one(".media-user-name span")
                             owner_username = username_el.get_text(strip=True) if username_el else "Unknown"
-                            url = lot.get("href", "")
+                            url = cls._get_str_attr(lot, "href")
                             offer_id = url.split("=")[-1] if "=" in url else url
                             lowcoasters[f] = {
                                 "filtration": f,
