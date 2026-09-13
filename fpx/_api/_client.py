@@ -91,6 +91,10 @@ class FunPayClient:
     async def get_my_sells(self) -> str:
         r = await self._account._request_engine.execute("GET", "/orders/trade")
         return r.text
+    
+    async def get_my_purchases(self) -> str:
+        r = await self._account._request_engine.execute("GET", "/orders/")
+        return r.text
 
     async def refund_order(self, order_id: str | int) -> Any:
         url = "/orders/refund"
@@ -188,4 +192,9 @@ class FunPayClient:
     async def get_next_sells(self, next_page_id: str | int) -> str:
         headers = {"X-Requested-With": "XMLHttpRequest"}
         r = await self.client.request("POST", "/orders/trade", data={"continue": next_page_id}, headers=headers)
+        return r.text
+
+    async def get_next_purchases(self, next_page_id: str | int) -> str:
+        headers = {"X-Requested-With": "XMLHttpRequest"}
+        r = await self.client.request("POST", "/orders/", data={"continue": next_page_id}, headers=headers)
         return r.text

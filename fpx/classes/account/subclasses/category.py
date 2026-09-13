@@ -34,9 +34,7 @@ class CategoryManager:
             stage = "парсингa данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLastCategoryLotError(
-                f"При выполнении {stage} произошла ошибка: {e}"
-            )
+            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}")
         result: list[CategoryLastLot] = []
         for el in data:
             result.append(CategoryLastLot(category_id=str(lot_category_id), **el))
@@ -65,9 +63,7 @@ class CategoryManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLastCategoryLotError(
-                f"При выполнении {stage} произошла ошибка: {e}"
-            )
+            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}")
         result: list[CategoryLastLot] = []
         for el in data:
             result.append(CategoryLastLot(category_id=str(chip_category_id), **el))

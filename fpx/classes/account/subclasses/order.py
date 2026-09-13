@@ -131,7 +131,5 @@ class OrderManager:
             status = s.status
             if status == "Возврат":
                 return True
-            raise fpx_err.FpxRefundError( 
-                f"Невозможно сделать возврат, текущий статус: {status}"
-            )
+            raise fpx_err.FpxRefundError(f"Невозможно сделать возврат, текущий статус: {status}")
         return None

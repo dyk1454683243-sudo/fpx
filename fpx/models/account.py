@@ -133,7 +133,7 @@ class Purchase:
             order_id=self.order_id, order_time=self.order_time, client_name=self.client_name, order_name=self.name
         )
         return cast(bool, await self._client._account.chat.send_message(self.chat_id, formatted_reply))
-    
+
 
 @dataclass
 class Review:

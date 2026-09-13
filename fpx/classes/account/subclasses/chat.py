@@ -67,9 +67,7 @@ class ChatManager:
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
-            raise fpx_err.FpxMessageDeliverError(
-                f"Сервер вернул ошибку: {error_code} - {error_msg}"
-            )
+            raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")
 
     async def get_chat_data(self, chat_id: int | str, last_message_node_id: int | str | None = None) -> ChatData:
         """
@@ -160,6 +158,4 @@ class ChatManager:
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
-            raise fpx_err.FpxMessageDeliverError(
-                f"Сервер вернул ошибку: {error_code} - {error_msg}"
-            )
+            raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")

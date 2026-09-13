@@ -52,6 +52,4 @@ class ReviewManager:
                 return True
             raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")
         except Exception:
-            raise fpx_err.FpxAnswerReviewError(
-                message=response.get("msg") if response.get("msg") else response
-            )
+            raise fpx_err.FpxAnswerReviewError(message=response.get("msg") if response.get("msg") else response)
