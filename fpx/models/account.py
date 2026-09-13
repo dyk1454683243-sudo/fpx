@@ -34,10 +34,9 @@ class CurReview:
     async def answer(self, answer_text: str) -> bool:
         """Ответить на отзыв"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
         if not self.order:
-            raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")
         formatted_reply = answer_text.format(
             author=self.author,
             order_id=self.order_id,
@@ -50,10 +49,9 @@ class CurReview:
     async def message_author(self, message_text: str) -> bool:
         """Ответить на отзыв в чате"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
         if not self.order:
-            raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")
         formatted_reply = message_text.format(
             author=self.author,
             order_id=self.order_id,
@@ -97,8 +95,7 @@ class Order:
     async def answer(self, answer_text: str) -> bool:
         """Ответить в этот же чат"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")
         formatted_reply = answer_text.format(
             order_id=self.order_id, order_time=self.order_time, client_name=self.client_name, order_name=self.name
         )
@@ -107,10 +104,36 @@ class Order:
     async def refund(self) -> bool:
         """Вернуть заказ"""
         if not self._client:
-            # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
-            raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
+            raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")
         return cast(bool, await self._client._account.order.refund_order(self.order_id))
 
+
+@dataclass
+class Purchase:
+    order_id: Optional[str] = None
+    chat_id: Optional[str] = None
+    order_time: Optional[str] = None
+    description: Optional[str] = None
+    client_name: Optional[str] = None
+    price: Optional[float] = None
+    amount: Optional[int] = None
+    topup_data: Optional[str] = None
+    finded_mapping: Optional[str] = None
+    status: Optional[str] = None
+    name: Optional[str] = None
+    category: Optional[str] = None
+    review: Optional[dict[str, Any]] = None
+    _client: Any = field(init=False, repr=False, default=None)
+
+    async def answer(self, answer_text: str) -> bool:
+        """Ответить в этот же чат"""
+        if not self._client:
+            raise fpx_err.FpxClientNotAttachedError("Объект Purchase не привязан к клиенту fpx")
+        formatted_reply = answer_text.format(
+            order_id=self.order_id, order_time=self.order_time, client_name=self.client_name, order_name=self.name
+        )
+        return cast(bool, await self._client._account.chat.send_message(self.chat_id, formatted_reply))
+    
 
 @dataclass
 class Review:
