@@ -168,6 +168,13 @@ class FpxGetOrderInfoError(FpxAccountError):
         super().__init__(message)
 
 
+class FpxGetPurchaseInfoError(FpxAccountError):
+    """Ошибка запроса данных покупки"""
+
+    def __init__(self, message: str = "Ошибка запроса данных покупки") -> None:
+        super().__init__(message)
+
+
 class FpxGetUserDataError(FpxAccountError):
     """Ошибка запроса данных юзера"""
 

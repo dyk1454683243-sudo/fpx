@@ -100,9 +100,7 @@ class OrderParser(BaseParser):
         if not buttons:
             buttons = [btn for btn in soup.find_all("button") if btn.get("value") and btn.get("value") != "Все"]
         filters = [
-            value.strip().lower()
-            for btn in buttons
-            if (value := cls._get_str_attr(btn, "value")) and value != "Все"
+            value.strip().lower() for btn in buttons if (value := cls._get_str_attr(btn, "value")) and value != "Все"
         ]
         lots = soup.select("a.tc-item:not(.offer-promo)")
         if not lots:

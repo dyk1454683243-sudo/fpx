@@ -163,7 +163,5 @@ class ProfileManager:
         except fpx_err.FpxAuthError:
             raise
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(
-                f"При сборе баланса, выполняя {step} произошла ошибка: {e}"
-            )
+            raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}")
         return cast(Balance, balance)

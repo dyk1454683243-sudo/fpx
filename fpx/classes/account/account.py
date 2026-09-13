@@ -15,6 +15,7 @@ from fpx.classes.account.subclasses.editor import FunPayEditor
 from fpx.classes.account.subclasses.lot import LotManager
 from fpx.classes.account.subclasses.order import OrderManager
 from fpx.classes.account.subclasses.profile import ProfileManager
+from fpx.classes.account.subclasses.purchase import PurchaseManager
 from fpx.classes.account.subclasses.review import ReviewManager
 from fpx.middlewares._request_engine import RequestEngine
 from fpx.utils.errors import FpxRefreshCookieError
@@ -49,6 +50,7 @@ class Account:
         self.editor = FunPayEditor(self)
         self.review = ReviewManager(self)
         self.category = CategoryManager(self)
+        self.purchase = PurchaseManager(self)
 
     async def upload_image(self, file_path: str) -> int:
         """
