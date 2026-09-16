@@ -194,7 +194,7 @@ class FpxGetUserPurchasesError(FpxAccountError):
 
     def __init__(self, message: str = "Ошибка запроса данных покупок юзера") -> None:
         super().__init__(message)
-        
+
 
 class FpxGetProfileError(FpxAccountError):
     """Ошибка запроса данных профиля юзера"""

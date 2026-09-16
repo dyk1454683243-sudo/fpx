@@ -3,7 +3,6 @@ from dataclasses import asdict
 from typing import Any
 
 from fpx.classes.account.subclasses.order import OrderManager
-from fpx.classes.account.subclasses.profile import ProfileManager
 from fpx.models.account import Order, Purchase
 from fpx.utils import errors as fpx_err
 

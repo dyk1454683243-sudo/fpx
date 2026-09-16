@@ -47,7 +47,6 @@ class PurchaseRunner:
                     result.append(Purchase(**order))
         return result
 
-
     async def _check_handler(self, handler: dict[str, Any], order: Purchase, state_ctx: FSMContext | None) -> bool:
         h_func = handler["function"]
         if handler.get("mapping") is not None:
