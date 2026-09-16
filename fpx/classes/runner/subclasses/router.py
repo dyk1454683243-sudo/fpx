@@ -25,6 +25,10 @@ class Router:
             "commands": [],
             "error": [],
             "order_command": [],
+            "purchase": [],
+            "confirmed_purchase": [],
+            "new_purchase": [],
+            "purchase_refund": [],
             # системные
             "startup": [],
             "flood": [],
@@ -369,6 +373,98 @@ class Router:
 
         def decorator(func: HandlerFunc) -> HandlerFunc:
             self._handlers["flood"].append(func)
+            return func
+
+        return decorator
+
+    def on_purchases(self, mapping: list[str] | None = None) -> Decorator:
+        """
+        Декоратор отслеживает все события покупок.
+        Не рекомендуется использовать вместе с on_cofirmed_purchases, on_new_purchase, on_refunded_purchases
+        во избежание дублирования событий.
+
+        Returns:
+            Purchase: Объект, содержащий:
+                - order_id (str): Уникальный ID заказа
+                - description (str): Описание лота
+                - order_time (str): Время оплаты заказа
+                - client_name (str): Имя клиента
+                - price (str): Цена товара
+                - status (str): Статус заказа
+                - name (str): Название товара
+                - answer (method): При указании текста в аргументах, отвечает на сообщение
+        """
+        if isinstance(mapping, str):
+            mapping = [mapping]
+
+        def decorator(func: HandlerFunc) -> HandlerFunc:
+            self._handlers["purchase"].append({"function": func, "mapping": mapping})
+            return func
+
+        return decorator
+
+    def on_confirmed_purchases(self, mapping: list[str] | str | None = None) -> Decorator:
+        """
+        Декоратор, который отслеживает только событие подтверждёния покупки.
+
+        Returns:
+            Purchase: Объект, содержащий:
+                - order_id (str): Уникальный ID заказа
+                - order_time (str): Время оплаты заказа
+                - client_name (str): Имя клиента
+                - price (str): Цена товара
+                - status (str): Статус заказа
+                - name (str): Название товара
+                - answer (method): При указании текста в аргументах, отвечает на сообщение
+        """
+        mapping = [mapping] if isinstance(mapping, str) else mapping
+
+        def decorator(func: HandlerFunc) -> HandlerFunc:
+            self._handlers["confirmed_purchase"].append({"function": func, "mapping": mapping})
+            return func
+
+        return decorator
+
+    def on_new_purchase(self, mapping: list[str] | str | None = None) -> Decorator:
+        """
+        Декоратор, который отслеживает только новые покупки.
+
+        Returns:
+            Purchase: Объект, содержащий:
+                - order_id (str): Уникальный ID заказа
+                - order_time (str): Время оплаты заказа
+                - client_name (str): Имя клиента
+                - price (str): Цена товара
+                - status (str): Статус заказа
+                - name (str): Название товара
+                - answer (method): При указании текста в аргументах, отвечает на сообщение
+        """
+        mapping = [mapping] if isinstance(mapping, str) else mapping
+
+        def decorator(func: HandlerFunc) -> HandlerFunc:
+            self._handlers["new_purchase"].append({"function": func, "mapping": mapping})
+            return func
+
+        return decorator
+
+    def on_refunded_purchase(self, mapping: list[str] | str | None = None) -> Decorator:
+        """
+        Декоратор отслеживает события возврата покупок.
+
+        Purchase:
+            Order: Объект, содержащий:
+                - order_id (str): Уникальный ID заказа
+                - order_time (str): Время оплаты заказа
+                - client_name (str): Имя клиента
+                - price (str): Цена товара
+                - status (str): Статус заказа
+                - name (str): Название товара
+                - answer (method): При указании текста в аргументах, отвечает на сообщение
+        """
+        mapping = [mapping] if isinstance(mapping, str) else mapping
+
+        def decorator(func: HandlerFunc) -> HandlerFunc:
+            self._handlers["purchase_refund"].append({"function": func, "mapping": mapping})
             return func
 
         return decorator

@@ -8,6 +8,7 @@ from fpx.classes.runner.subclasses._chat import ChatRunner
 from fpx.classes.runner.subclasses._order import OrderRunner
 from fpx.classes.runner.subclasses._review import ReviewRunner
 from fpx.classes.runner.subclasses.router import Router
+from fpx.classes.runner.subclasses._purchase import PurchaseRunner
 from fpx.utils import errors as fpx_err
 
 
@@ -21,6 +22,7 @@ class Runner:
         self._order = OrderRunner(self)
         self._review = ReviewRunner(self)
         self._category = CategoryRunner(self)
+        self._purchase = PurchaseRunner(self)
         self.router = Router()
         self.storage: Optional[Any] = None
         self._cache: dict[str, list[Any]] = {
@@ -34,6 +36,8 @@ class Runner:
             "old_lot_categories": [],
             "chip_categories": [],
             "old_chip_categories": [],
+            "purchases": [],
+            "old_purchases": [],
         }
         self._cache_is_updated = False
         self.is_running = True
@@ -136,7 +140,14 @@ class Runner:
             tasks.append(self._category._check_lot_categories(watch_lots))
         if watch_chips is not None:
             tasks.append(self._category._check_chip_categories(watch_chips))
-        tasks.extend([self._chat._check_chats(), self._order._check_orders(), self._review._check_reviews()])
+        tasks.extend(
+            [
+                self._chat._check_chats(),
+                self._order._check_orders(), 
+                self._review._check_reviews(),
+                self._purchase._check_purchases()
+                ]
+            )
         results = await asyncio.gather(*tasks, return_exceptions=True)
         to_raise = None
         for result in results:
