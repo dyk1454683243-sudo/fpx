@@ -7,6 +7,7 @@ from typing import Any, Callable
 from fpx.fsm import FSMContext
 from fpx.models.chat import Message
 from fpx.utils import errors as fpx_err
+from fpx.utils.formatting import safe_format
 
 logger = logging.getLogger("fpx.chat_runner")
 
@@ -205,8 +206,8 @@ class ChatRunner:
                 matched = False
                 for trigger, reply in handler["mapping"].items():
                     if msg_text.startswith(trigger.lower()):
-                        formatted_reply = reply.format(
-                            sender=message.sender, chat_id=message.chat_id, text=message.text
+                        formatted_reply = safe_format(
+                            reply, sender=message.sender, chat_id=message.chat_id, text=message.text
                         )
                         await message.answer(formatted_reply)
                         matched = True
