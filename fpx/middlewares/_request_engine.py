@@ -67,14 +67,14 @@ class RequestEngine:
             except httpx.ReadTimeout as e:
                 if method.upper() == "GET":
                     if attempt == attempts - 1:
-                        raise e
+                        raise
                     await asyncio.sleep(backoff**attempt)
                 else:
                     raise fpx_err.FpxRequestError(
                         message=f"POST запрос упал по таймауту ответаВозможно действие выполнилось: {e}"
-                    )
-            except (httpx.ConnectTimeout, httpx.ConnectError) as e:
+                    ) from e
+            except (httpx.ConnectTimeout, httpx.ConnectError):
                 if attempt == attempts - 1:
-                    raise e
+                    raise
                 await asyncio.sleep(backoff**attempt)
         raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")

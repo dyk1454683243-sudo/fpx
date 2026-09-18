@@ -1,5 +1,7 @@
 """Тесты ProfileParser — баланс, профиль, продажи, главная."""
 
+import json
+
 import pytest
 
 from fpx._parsers._profile import ProfileParser
@@ -101,3 +103,16 @@ class TestProfileParser:
         """Нет ссылки на пользователя → FpxNullDataError."""
         with pytest.raises(fpx_err.FpxNullDataError):
             ProfileParser.parse_main_menu("<html><body>Пусто</body></html>")
+
+    def test_parse_main_menu_invalid_app_data_chains_cause(self):
+        """Сломанный data-app-data → FpxParseError с исходным JSONDecodeError в __cause__."""
+        html = """
+        <html><body data-app-data="not-json">
+          <a class="user-link-dropdown" href="/users/42/">
+            <div class="user-link-name">Админ</div>
+          </a>
+        </body></html>
+        """
+        with pytest.raises(fpx_err.FpxParseError) as exc:
+            ProfileParser.parse_main_menu(html)
+        assert isinstance(exc.value.__cause__, json.JSONDecodeError)

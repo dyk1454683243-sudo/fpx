@@ -40,9 +40,11 @@ class TestGetChats:
 
     @pytest.mark.asyncio
     async def test_error_wrapped(self, manager, account):
-        account._client.get_chats_page.side_effect = Exception("boom")
-        with pytest.raises(fpx_err.FpxGetChatsError):
+        cause = RuntimeError("boom")
+        account._client.get_chats_page.side_effect = cause
+        with pytest.raises(fpx_err.FpxGetChatsError) as exc:
             await manager.get_chats()
+        assert exc.value.__cause__ is cause
 
 
 class TestGetChatData:
@@ -96,9 +98,11 @@ class TestGetChatData:
 
     @pytest.mark.asyncio
     async def test_error_wrapped(self, manager, account):
-        account._client.get_current_chat.side_effect = Exception("boom")
-        with pytest.raises(fpx_err.FpxGetChatDataError):
+        cause = RuntimeError("boom")
+        account._client.get_current_chat.side_effect = cause
+        with pytest.raises(fpx_err.FpxGetChatDataError) as exc:
             await manager.get_chat_data("chat-1")
+        assert exc.value.__cause__ is cause
 
 
 class TestSendMessage:

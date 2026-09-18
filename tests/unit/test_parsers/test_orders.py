@@ -44,6 +44,21 @@ class TestOrderParser:
         with pytest.raises(fpx_err.FpxNullDataError):
             OrderParser.parse_order_page("<html><body>Пусто</body></html>")
 
+    def test_parse_order_page_unexpected_error_chains_cause(self, monkeypatch):
+        """Неожиданная ошибка парсинга → FpxParseError с исходным исключением в __cause__."""
+
+        def boom(*args, **kwargs):
+            raise RuntimeError("attr boom")
+
+        monkeypatch.setattr(OrderParser, "_get_str_attr", boom)
+        html = """
+        <h1 class="page-header"><span>Заказ #1</span></h1>
+        <div class="chat-float" data-id="chat-1"></div>
+        """
+        with pytest.raises(fpx_err.FpxParseError) as exc:
+            OrderParser.parse_order_page(html)
+        assert isinstance(exc.value.__cause__, RuntimeError)
+
     def test_parse_category_page_with_filters(self):
         """Категория с фильтрами: находит самый дешёвый лот по каждому фильтру."""
         html = """

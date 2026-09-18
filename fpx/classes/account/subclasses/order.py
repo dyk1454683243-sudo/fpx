@@ -40,7 +40,7 @@ class OrderManager:
                 chat_id=data["chat_id"],
             )
         except Exception as e:
-            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetOrderInfoError(f"При выполнении {stage} произошла ошибка: {e}") from e
         return order
 
     async def find_orders_by_buyer_name(
@@ -110,7 +110,7 @@ class OrderManager:
                     order.description = full_order.description
                     order.review = full_order.review
         except Exception as e:
-            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetOrderInfoError(f"При {stage} произошла ошибка: {e}") from e
         return good_orders
 
     async def refund_order(self, order_id: str | int) -> bool | None:
