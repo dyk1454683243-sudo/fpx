@@ -90,7 +90,7 @@ class TestDeleteReview:
     @pytest.mark.asyncio
     async def test_success(self, manager, account):
         response = MagicMock()
-        response.json.return_value = {"content": "<div class=\"review-container\"></div>"}
+        response.json.return_value = {"content": '<div class="review-container"></div>'}
         account._client.delete_review.return_value = response
         result = await manager.delete_review("order-1")
         assert result is True
