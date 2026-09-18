@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/bymyforge/fpx" target="_blank">
-<img src="https://img.shields.io/badge/GitHub-temp_inactive-lightgrey?style=for-the-badge&logo=github&logoColor=white" alt="GitHub (temp inactive)">
+  <a href="https://github.com/funpayx/fpx" target="_blank">
+<img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
 </a>
 <a href="https://gitlab.com/funpayx/fpx" target="_blank">
 <img src="https://img.shields.io/badge/GitLab-FC6D26?style=for-the-badge&logo=gitlab&logoColor=white" alt="GitLab">
