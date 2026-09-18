@@ -1,5 +1,7 @@
 """Доп. тесты Router.invoke: Dependency Injection и цепочка middleware."""
 
+from typing import Any, Optional
+
 import pytest
 
 from fpx.classes.runner.subclasses.router import Router
@@ -52,6 +54,83 @@ class TestInvokeEventBinding:
 
         await router.invoke(handler, make_message(), None, args=["Bob", "25"])
         assert received == {"name": "Bob", "age": "25"}
+
+    @pytest.mark.asyncio
+    async def test_list_str_annotation_does_not_crash_invoke(self, router):
+        received = {}
+
+        async def handler(msg: Message, tags: list[str] | None = None):
+            received["msg"] = msg
+            received["tags"] = tags
+
+        message = make_message()
+        await router.invoke(handler, message)
+        assert received["msg"] is message
+        assert received["tags"] is None
+
+    @pytest.mark.asyncio
+    async def test_dict_annotation_is_filled_from_args(self, router):
+        received = {}
+
+        async def handler(msg: Message, meta: dict[str, int]):
+            received["msg"] = msg
+            received["meta"] = meta
+
+        message = make_message()
+        payload = {"n": 1}
+        await router.invoke(handler, message, None, args=[payload])
+        assert received["msg"] is message
+        assert received["meta"] is payload
+
+    @pytest.mark.asyncio
+    async def test_optional_annotation_does_not_crash_invoke(self, router):
+        received = {}
+
+        async def handler(msg: Message, extra: Optional[str] = None):
+            received["msg"] = msg
+            received["extra"] = extra
+
+        message = make_message()
+        await router.invoke(handler, message)
+        assert received["msg"] is message
+        assert received["extra"] is None
+
+    @pytest.mark.asyncio
+    async def test_union_none_annotation_does_not_crash_invoke(self, router):
+        received = {}
+
+        async def handler(msg: Message, extra: Message | None = None):
+            received["msg"] = msg
+            received["extra"] = extra
+
+        message = make_message()
+        await router.invoke(handler, message)
+        assert received["msg"] is message
+        assert received["extra"] is None
+
+    @pytest.mark.asyncio
+    async def test_only_parameterized_annotations_do_not_crash_invoke(self, router):
+        received = {}
+
+        async def handler(tags: list[str] | None = None, extra: Optional[Message] = None):
+            received["tags"] = tags
+            received["extra"] = extra
+
+        await router.invoke(handler, make_message())
+        assert received == {"tags": None, "extra": None}
+
+    @pytest.mark.asyncio
+    async def test_typing_any_annotation_does_not_crash_invoke(self, router):
+        received = {}
+
+        async def handler(msg: Message, payload: Any = None):
+            received["msg"] = msg
+            received["payload"] = payload
+
+        message = make_message()
+        await router.invoke(handler, message)
+        assert received["msg"] is message
+        assert received["payload"] is None
 
 
 class TestInvokeDependencyInjection:
