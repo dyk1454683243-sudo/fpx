@@ -1,6 +1,6 @@
 import asyncio
 import inspect
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional, get_origin
 
 from fpx.fsm import FSMContext
 from fpx.models.chat import Message
@@ -60,9 +60,17 @@ class Router:
             arg_index = 0
             nonlocal generators_to_close
             for param_name, param in sig.parameters.items():
-                if param.annotation is not inspect.Parameter.empty and isinstance(ev, param.annotation):
-                    kwargs[param_name] = ev
-                    continue
+                annotation = param.annotation
+                # get_origin() is not None for list[str], Optional[X], Message | None, etc.
+                # isinstance() still TypeError-s on typing.Any and other special forms.
+                if annotation is not inspect.Parameter.empty and get_origin(annotation) is None:
+                    try:
+                        matches_event = isinstance(ev, annotation)
+                    except TypeError:
+                        matches_event = False
+                    if matches_event:
+                        kwargs[param_name] = ev
+                        continue
                 if state_ctx and param.annotation == FSMContext:
                     kwargs[param_name] = state_ctx
                     continue
