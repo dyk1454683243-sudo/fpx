@@ -13,6 +13,7 @@ class TestServicesExports:
             "LotManager",
             "OrderManager",
             "ProfileManager",
+            "PurchaseManager",
             "ReviewManager",
         }
         assert set(services.__all__) == expected
