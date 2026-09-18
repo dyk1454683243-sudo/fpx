@@ -78,6 +78,13 @@ class TestShutdown:
     @pytest.mark.asyncio
     async def test_shutdown_cancels_polling_task(self):
         tools = FunPayTools(TEST_GKEY)
+        if tools._refresh_task and not tools._refresh_task.done():
+            tools._refresh_task.cancel()
+            try:
+                await tools._refresh_task
+            except asyncio.CancelledError:
+                pass
+            tools._refresh_task = None
 
         async def hang(*args, **kwargs):
             await asyncio.sleep(3600)
