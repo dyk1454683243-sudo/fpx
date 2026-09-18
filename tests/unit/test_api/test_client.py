@@ -264,6 +264,9 @@ class TestSetOffersHidden:
         await client.set_offers_hidden(7, False)
         _, kwargs = account._request_engine.execute.call_args
         assert kwargs["data"] == {"userId": 7, "mode": 0}
+
+
+class TestDirectHttpClientEndpoints:
     @pytest.mark.asyncio
     async def test_upload_image(self, client, http_client):
         http_client.request = AsyncMock(return_value=make_response(json_data={"fileId": 5}))
