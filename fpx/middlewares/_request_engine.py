@@ -16,6 +16,16 @@ class RequestEngine:
         self._account = account
         self._client = client
         self.runner: "Runner | None" = None
+        # один in-flight запрос на первый csrf_token, иначе параллельные POST
+        # на старте бота устроят thundering herd к главной странице
+        self._csrf_lock = asyncio.Lock()
+
+    async def _ensure_csrf_token(self) -> None:
+        if self._account.data._csrf_token is not None:
+            return
+        async with self._csrf_lock:
+            if self._account.data._csrf_token is None:
+                await self._account.profile.get_user_data()
 
     async def execute(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         attempts = 3
@@ -25,8 +35,7 @@ class RequestEngine:
                 kwargs["data"] = {}
             if "headers" not in kwargs:
                 kwargs["headers"] = {}
-            if self._account.data._csrf_token is None:
-                await self._account.profile.get_user_data()
+            await self._ensure_csrf_token()
             if "csrf_token" not in kwargs["data"]:
                 kwargs["data"]["csrf_token"] = self._account.data._csrf_token
             if "X-Cp-Csrf-Token" not in kwargs["headers"]:
