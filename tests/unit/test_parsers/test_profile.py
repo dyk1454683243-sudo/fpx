@@ -171,10 +171,11 @@ class TestProfileParser:
         page = ProfileParser.parse_transactions(html)
         assert page.transactions[0].type == "payment"
         assert page.transactions[0].currency == "$"
-        assert page.transactions[0].status == "pending"
+        assert page.transactions[0].status == "completed"
         assert page.transactions[1].type == "other"
         assert page.transactions[1].amount == -1.0
         assert page.transactions[1].currency == "€"
+        assert page.transactions[1].status == "pending"
 
     def test_parse_transactions_broken_items_raise(self):
         """Элементы есть, но без id — FpxParseError."""
