@@ -12,6 +12,7 @@ from fpx.classes.account.subclasses.editor import FunPayEditor
 from fpx.classes.account.subclasses.lot import LotManager
 from fpx.classes.account.subclasses.order import OrderManager
 from fpx.classes.account.subclasses.profile import ProfileManager
+from fpx.classes.account.subclasses.purchase import PurchaseManager
 from fpx.classes.account.subclasses.review import ReviewManager
 from fpx.middlewares._request_engine import RequestEngine
 
@@ -33,6 +34,7 @@ class TestAccountInit:
         assert isinstance(account.addons, AddonsManager)
         assert isinstance(account.profile, ProfileManager)
         assert isinstance(account.order, OrderManager)
+        assert isinstance(account.purchase, PurchaseManager)
         assert isinstance(account.lot, LotManager)
         assert isinstance(account.editor, FunPayEditor)
         assert isinstance(account.review, ReviewManager)
@@ -45,6 +47,7 @@ class TestAccountInit:
         account = Account(http_client)
         assert account.chat._account is account
         assert account.lot._account is account
+        assert account.purchase._account is account
 
 
 class TestUploadImage:

@@ -90,9 +90,11 @@ class TestCacheRunner:
         runner._chat._check_chats = AsyncMock()
         runner._order._check_orders = AsyncMock()
         runner._review._check_reviews = AsyncMock()
+        runner._purchase._check_purchases = AsyncMock()
         await runner._cache_runner(None, None)
         runner._chat._check_chats.assert_awaited_once()
         runner._order._check_orders.assert_awaited_once()
+        runner._purchase._check_purchases.assert_awaited_once()
         runner._review._check_reviews.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -101,9 +103,11 @@ class TestCacheRunner:
         runner._chat._check_chats = AsyncMock(side_effect=Exception("boom"))
         runner._order._check_orders = AsyncMock()
         runner._review._check_reviews = AsyncMock()
+        runner._purchase._check_purchases = AsyncMock()
         runner._handle_error = AsyncMock()
         await runner._cache_runner(None, None)
         runner._order._check_orders.assert_awaited_once()
+        runner._purchase._check_purchases.assert_awaited_once()
         runner._handle_error.assert_awaited_once()
 
 

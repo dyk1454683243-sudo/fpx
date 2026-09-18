@@ -34,6 +34,7 @@ nav:
   - Функционал:
     - Чаты и сообщения: chat.md
     - Заказы: orders.md
+    - Покупки: purchases.md
     - Отзывы: review.md
     - Профиль и баланс: profile.md
     - Лоты и поднятие: lots.md

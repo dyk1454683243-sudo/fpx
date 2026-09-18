@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from fpx.models.account import Balance, CurReview, Order, Profile, Review, UserData
+from fpx.models.account import Balance, CurReview, Order, Profile, Purchase, Review, UserData
 from fpx.models.lots import LotInfo
 
 
@@ -17,6 +17,14 @@ class TestAccountModels:
 
     def test_order_model(self):
         order = Order(order_id="999", client_name="Вася", price=50.0, status="paid", name="Товар", chat_id="chat-1")
+        assert order.order_id == "999"
+        assert order.price == 50.0
+
+    def test_purchase_model(self):
+        # Purchase — братский класс Order: те же поля, то же поведение.
+        order = Purchase(
+            order_id="999", client_name="Продавец", price=50.0, status="paid", name="Товар", chat_id="chat-1"
+        )
         assert order.order_id == "999"
         assert order.price == 50.0
 
@@ -47,6 +55,17 @@ class TestAccountModels:
     @pytest.mark.asyncio
     async def test_order_answer_with_mock_client(self):
         order = Order(order_id="10", order_time="12:00", client_name="Иван", name="Товар", chat_id="chat-10")
+        mock_client = MagicMock()
+        mock_client._account.chat.send_message = AsyncMock(return_value=True)
+        order._client = mock_client
+        result = await order.answer("Заказ {order_id} готов!")
+        assert result is True
+        args = mock_client._account.chat.send_message.call_args[0]
+        assert args[1] == "Заказ 10 готов!"
+
+    @pytest.mark.asyncio
+    async def test_purchase_answer_with_mock_client(self):
+        order = Purchase(order_id="10", order_time="12:00", client_name="Продавец", name="Товар", chat_id="chat-10")
         mock_client = MagicMock()
         mock_client._account.chat.send_message = AsyncMock(return_value=True)
         order._client = mock_client

@@ -76,6 +76,43 @@ class TestRouter:
 
         assert len(router._handlers["order"]) == 1
 
+    def test_on_purchases_decorator(self):
+        router = Router()
+
+        @router.on_purchases()
+        async def handler(order):
+            pass
+
+        assert len(router._handlers["purchase"]) == 1
+
+    def test_on_new_purchase_decorator(self):
+        router = Router()
+
+        @router.on_new_purchase()
+        async def handler(order):
+            pass
+
+        assert len(router._handlers["new_purchase"]) == 1
+        assert router._handlers["new_purchase"][0]["function"] == handler
+
+    def test_on_confirmed_purchases_decorator(self):
+        router = Router()
+
+        @router.on_confirmed_purchases()
+        async def handler(order):
+            pass
+
+        assert len(router._handlers["confirmed_purchase"]) == 1
+
+    def test_on_refunded_purchase_decorator(self):
+        router = Router()
+
+        @router.on_refunded_purchase()
+        async def handler(order):
+            pass
+
+        assert len(router._handlers["purchase_refund"]) == 1
+
     def test_on_new_review_decorator(self):
         router = Router()
 

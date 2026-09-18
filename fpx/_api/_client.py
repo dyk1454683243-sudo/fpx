@@ -91,7 +91,7 @@ class FunPayClient:
     async def get_my_sells(self) -> str:
         r = await self._account._request_engine.execute("GET", "/orders/trade")
         return r.text
-    
+
     async def get_my_purchases(self) -> str:
         r = await self._account._request_engine.execute("GET", "/orders/")
         return r.text
