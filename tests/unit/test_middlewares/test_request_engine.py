@@ -1,5 +1,6 @@
 """Тесты RequestEngine — обёртка над httpx с ретраями, csrf и антифлудом."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import httpx
@@ -91,6 +92,109 @@ class TestRequestEngineCsrf:
             await engine.execute(method, "/x", data={})
             _, kwargs = http_client.request.call_args
             assert kwargs["data"]["csrf_token"] == "known_token"
+
+    @pytest.mark.asyncio
+    async def test_concurrent_posts_fetch_csrf_token_once(self, account, http_client):
+        account.data._csrf_token = None
+        fetch_started = asyncio.Event()
+        release_fetch = asyncio.Event()
+        in_flight = 0
+        max_in_flight = 0
+
+        async def fake_get_user_data():
+            nonlocal in_flight, max_in_flight
+            in_flight += 1
+            max_in_flight = max(max_in_flight, in_flight)
+            fetch_started.set()
+            await release_fetch.wait()
+            account.data._csrf_token = "fresh_token"
+            in_flight -= 1
+
+        account.profile.get_user_data = AsyncMock(side_effect=fake_get_user_data)
+        http_client.request = AsyncMock(return_value=make_response(200))
+        engine = RequestEngine(account, http_client)
+
+        tasks = [asyncio.create_task(engine.execute("POST", "/runner/", data={})) for _ in range(10)]
+        await fetch_started.wait()
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert account.profile.get_user_data.await_count == 1
+        assert max_in_flight == 1
+        release_fetch.set()
+        responses = await asyncio.gather(*tasks)
+
+        assert all(response.status_code == 200 for response in responses)
+        assert account.profile.get_user_data.await_count == 1
+        assert max_in_flight == 1
+        assert http_client.request.await_count == 10
+        for call in http_client.request.await_args_list:
+            assert call.kwargs["data"]["csrf_token"] == "fresh_token"
+            assert call.kwargs["headers"]["X-Cp-Csrf-Token"] == "fresh_token"
+
+        await asyncio.gather(*[engine.execute("POST", "/runner/", data={}) for _ in range(5)])
+        assert account.profile.get_user_data.await_count == 1
+        assert http_client.request.await_count == 15
+
+    @pytest.mark.asyncio
+    async def test_cached_csrf_token_skips_fetch_for_concurrent_posts(self, account, http_client):
+        http_client.request = AsyncMock(return_value=make_response(200))
+        engine = RequestEngine(account, http_client)
+
+        await asyncio.gather(*[engine.execute("POST", "/runner/", data={}) for _ in range(5)])
+
+        account.profile.get_user_data.assert_not_awaited()
+        assert http_client.request.await_count == 5
+
+    @pytest.mark.asyncio
+    async def test_csrf_fetch_retries_after_first_failure(self, account, http_client):
+        account.data._csrf_token = None
+        calls = 0
+
+        async def fake_get_user_data():
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise RuntimeError("csrf fetch failed")
+            account.data._csrf_token = "fresh_token"
+
+        account.profile.get_user_data = AsyncMock(side_effect=fake_get_user_data)
+        http_client.request = AsyncMock(return_value=make_response(200))
+        engine = RequestEngine(account, http_client)
+
+        with pytest.raises(RuntimeError, match="csrf fetch failed"):
+            await engine.execute("POST", "/runner/", data={})
+        http_client.request.assert_not_awaited()
+
+        response = await engine.execute("POST", "/runner/", data={})
+        assert response.status_code == 200
+        assert account.profile.get_user_data.await_count == 2
+        _, kwargs = http_client.request.call_args
+        assert kwargs["data"]["csrf_token"] == "fresh_token"
+
+    @pytest.mark.asyncio
+    async def test_concurrent_mixed_methods_share_single_csrf_fetch(self, account, http_client):
+        account.data._csrf_token = None
+        release_fetch = asyncio.Event()
+
+        async def fake_get_user_data():
+            await release_fetch.wait()
+            account.data._csrf_token = "fresh_token"
+
+        account.profile.get_user_data = AsyncMock(side_effect=fake_get_user_data)
+        http_client.request = AsyncMock(return_value=make_response(200))
+        engine = RequestEngine(account, http_client)
+
+        tasks = [
+            asyncio.create_task(engine.execute(method, "/x", data={}))
+            for method in ("POST", "PUT", "DELETE", "POST", "PUT")
+        ]
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        release_fetch.set()
+        await asyncio.gather(*tasks)
+
+        assert account.profile.get_user_data.await_count == 1
+        assert http_client.request.await_count == 5
 
 
 class TestRequestEngineFlood:
