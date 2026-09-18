@@ -47,7 +47,9 @@ class OrderRunner:
     async def _check_handler(self, handler: dict[str, Any], order: Order, state_ctx: FSMContext | None) -> bool:
         h_func = handler["function"]
         if handler.get("mapping") is not None:
-            msg_text = order.description.lower() if order.description else ""
+            if order.description is None:
+                return False
+            msg_text = order.description.lower()
             matched = False
             for trigger in handler["mapping"]:
                 if trigger.lower() in msg_text:
