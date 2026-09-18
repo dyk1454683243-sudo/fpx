@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, List, cast
 
 from fpx.utils import errors as fpx_err
+from fpx.utils.formatting import safe_format
 
 
 @dataclass
@@ -38,7 +39,7 @@ class Message:
         if not self._client:
             # TODO(#12): убрать ignore после аннотации fpx/utils/errors.py
             raise fpx_err.FpxClientNotAttachedError("Объект Message не привязан к клиенту fpx")  # type: ignore[no-untyped-call]
-        formatted_reply = answer_text.format(sender=self.sender, chat_id=self.chat_id, text=self.text)
+        formatted_reply = safe_format(answer_text, sender=self.sender, chat_id=self.chat_id, text=self.text)
         return cast(bool, await self._client._account.chat.send_message(self.chat_id, formatted_reply))
 
 

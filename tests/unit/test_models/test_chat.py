@@ -42,3 +42,25 @@ class TestChatModels:
         result = await msg.answer("Ответ")
         assert result is True
         mock_client._account.chat.send_message.assert_awaited_once_with("123", "Ответ")
+
+    @pytest.mark.asyncio
+    async def test_message_answer_formats_known_placeholders(self):
+        msg = Message(node_msg_id=123456, sender="User", chat_id="123", text="Hello", is_system=False)
+        mock_client = MagicMock()
+        mock_client._account.chat.send_message = AsyncMock(return_value=True)
+        msg._client = mock_client
+        result = await msg.answer("Привет, {sender}! Чат {chat_id}")
+        assert result is True
+        mock_client._account.chat.send_message.assert_awaited_once_with("123", "Привет, User! Чат 123")
+
+    @pytest.mark.asyncio
+    async def test_message_answer_keeps_literal_braces(self):
+        msg = Message(node_msg_id=123456, sender="User", chat_id="123", text="Hello", is_system=False)
+        mock_client = MagicMock()
+        mock_client._account.chat.send_message = AsyncMock(return_value=True)
+        msg._client = mock_client
+        result = await msg.answer("Привет, {sender}! Промокод {SALE50} и {100}")
+        assert result is True
+        mock_client._account.chat.send_message.assert_awaited_once_with(
+            "123", "Привет, User! Промокод {SALE50} и {100}"
+        )

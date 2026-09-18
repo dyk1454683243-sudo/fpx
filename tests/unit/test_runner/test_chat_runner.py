@@ -319,6 +319,38 @@ class TestTriggerMessageHandlers:
         await chat_runner._trigger_message_handlers(msg)
 
         msg._client._account.chat.send_message.assert_awaited_once()
+        sent_text = msg._client._account.chat.send_message.await_args[0][1]
+        assert sent_text == "Здравствуйте, User!"
+        handler_func.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_mapping_keeps_literal_braces_in_reply(self, chat_runner, runner):
+        msg = make_message(sender="User", text="привет всем")
+        msg._client = MagicMock()
+        msg._client._account.chat.send_message = AsyncMock()
+
+        handler_func = AsyncMock()
+
+        async def fake_handler(message: Message, **kwargs):
+            await handler_func(message, **kwargs)
+
+        runner.router._handlers["message"] = [
+            {
+                "state": None,
+                "filter_text": None,
+                "mapping": {"привет": "Здравствуйте, {sender}! Промокод {SALE50}"},
+                "contains": None,
+                "regex": None,
+                "ignore_chat_id": None,
+                "ignore_sender": None,
+                "custom": None,
+                "function": fake_handler,
+            }
+        ]
+        await chat_runner._trigger_message_handlers(msg)
+
+        sent_text = msg._client._account.chat.send_message.await_args[0][1]
+        assert sent_text == "Здравствуйте, User! Промокод {SALE50}"
         handler_func.assert_awaited_once()
 
     @pytest.mark.asyncio
