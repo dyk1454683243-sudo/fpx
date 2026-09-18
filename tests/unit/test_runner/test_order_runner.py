@@ -116,6 +116,32 @@ class TestCheckHandler:
         result = await order_runner._check_handler(handler, order, None)
         assert result is False
 
+    @pytest.mark.asyncio
+    async def test_mapping_none_description_returns_false(self, order_runner, runner):
+        called = []
+
+        async def func(order: Order):
+            called.append(order)
+
+        handler = {"function": func, "mapping": ["VIP"]}
+        order = Order(order_id="1", description=None)
+        result = await order_runner._check_handler(handler, order, None)
+        assert result is False
+        assert called == []
+
+    @pytest.mark.asyncio
+    async def test_no_mapping_invokes_when_description_is_none(self, order_runner, runner):
+        called = []
+
+        async def func(order: Order):
+            called.append(order)
+
+        handler = {"function": func, "mapping": None}
+        order = Order(order_id="1", description=None)
+        result = await order_runner._check_handler(handler, order, None)
+        assert result is True
+        assert called == [order]
+
 
 class TestCheckTriggerForCommand:
     @pytest.mark.asyncio
