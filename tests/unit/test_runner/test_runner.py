@@ -224,7 +224,7 @@ class TestRunLoop:
 
         @runner.router.on_error()
         async def on_error(event, exc):
-            seen.append((event, exc))
+            seen.append((event, exc, exc.__cause__))
 
         async def cache_runner(*args):
             raise TypeError("parser broken")
@@ -234,9 +234,10 @@ class TestRunLoop:
             await runner._run_loop(1)
 
         assert len(seen) == 1
-        event, exc = seen[0]
+        event, exc, cause = seen[0]
         assert event is None
         assert isinstance(exc, fpx_err.FpxCriticalRunnerError)
+        assert isinstance(cause, TypeError)
         assert "parser broken" in str(exc)
         assert "Критическая ошибка polling" in caplog.text
 
@@ -317,7 +318,7 @@ class TestStartPolling:
 
         @runner.router.on_error()
         async def on_error(event, exc):
-            seen.append((event, exc))
+            seen.append((event, exc, exc.__cause__))
 
         try:
             task = await runner.start_polling(timer=0.01, is_background=True)
@@ -330,10 +331,10 @@ class TestStartPolling:
             await asyncio.sleep(0)
 
             assert seen
-            event, exc = seen[0]
+            event, exc, cause = seen[0]
             assert event is None
             assert isinstance(exc, fpx_err.FpxCriticalRunnerError)
-            assert isinstance(exc.__cause__, TypeError)
+            assert isinstance(cause, TypeError)
             assert runner.is_running is False
 
             stored = task.exception()

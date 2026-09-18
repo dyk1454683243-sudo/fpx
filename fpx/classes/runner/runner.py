@@ -163,9 +163,11 @@ class Runner:
         self.is_running = False
         self._polling_error_reported = True
         logger.error("Критическая ошибка polling: %s", exc, exc_info=exc)
-        critical = (
-            exc if isinstance(exc, fpx_err.FpxCriticalRunnerError) else fpx_err.FpxCriticalRunnerError(message=str(exc))
-        )
+        if isinstance(exc, fpx_err.FpxCriticalRunnerError):
+            critical = exc
+        else:
+            critical = fpx_err.FpxCriticalRunnerError(message=str(exc))
+            critical.__cause__ = exc
         try:
             await self._handle_error(None, critical)
         except Exception:
