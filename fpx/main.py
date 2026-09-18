@@ -40,6 +40,8 @@ class FunPayTools:
                 "http://": httpx.AsyncHTTPTransport(proxy=proxy),
                 "https://": httpx.AsyncHTTPTransport(proxy=proxy),
             }
+        # Закрываем клиент только если создали его сами — чужой пул оставляем вызывающему коду.
+        self._owns_http_client = http_client is None
         if http_client:
             self._client = http_client
             self._client.cookies.update(self._cookies)
@@ -94,5 +96,5 @@ class FunPayTools:
                 pass
         if hasattr(self, "runner") and self.runner.is_running:
             self.runner.is_running = False
-        if self._client and not self._client.is_closed:
+        if self._owns_http_client and self._client and not self._client.is_closed:
             await self._client.aclose()
