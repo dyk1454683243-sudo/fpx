@@ -216,6 +216,6 @@ class ProfileParser(BaseParser):
             app_data_str = cls._get_str_attr(body, "data-app-data", "{}")
             app_data = json.loads(app_data_str)
             result["csrf-token"] = app_data.get("csrf-token", "")
-        except Exception:
-            raise fpx_err.FpxParseError("Не удалось распарсить csrf_token из data-app-data.")
+        except Exception as e:
+            raise fpx_err.FpxParseError("Не удалось распарсить csrf_token из data-app-data.") from e
         return result

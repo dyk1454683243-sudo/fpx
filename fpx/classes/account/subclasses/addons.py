@@ -29,7 +29,7 @@ class AddonsManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_lot_menu(html)
         except Exception as e:
-            raise fpx_err.FpxGetGameIDError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetGameIDError(f"При выполнении {stage} произошла ошибка: {e}") from e
         return cast("str | int", data)
 
     async def calc_category_price(self, price: str | float | int, node_id: str | int) -> list[Calc]:
@@ -53,7 +53,7 @@ class AddonsManager:
             data = await self._account._client.calc_category_price(price, node_id)
             price_list = data["methods"]
         except Exception as e:
-            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
+            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}") from e
         calc_list: list[Calc] = []
         for price_item in price_list:
             calc_list.append(

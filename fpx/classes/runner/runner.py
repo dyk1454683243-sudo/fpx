@@ -68,7 +68,7 @@ class Runner:
             except (httpx.HTTPError, httpx.NetworkError):
                 await asyncio.sleep(timer)
             except Exception as e:
-                raise fpx_err.FpxCriticalRunnerError(message=str(e))
+                raise fpx_err.FpxCriticalRunnerError(message=str(e)) from e
 
     async def start_polling(
         self,

@@ -63,10 +63,12 @@ class TestReviewAnswer:
         import json
 
         response = MagicMock()
-        response.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
+        cause = json.JSONDecodeError("msg", "doc", 0)
+        response.json.side_effect = cause
         account._client.answer_review.return_value = response
-        with pytest.raises(fpx_err.FpxAnswerReviewError):
+        with pytest.raises(fpx_err.FpxAnswerReviewError) as exc:
             await manager.review_answer("order-1", "text")
+        assert exc.value.__cause__ is cause
 
     @pytest.mark.asyncio
     async def test_text_not_in_response_content_raises(self, manager, account):
