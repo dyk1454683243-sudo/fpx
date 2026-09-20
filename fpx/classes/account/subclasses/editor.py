@@ -27,7 +27,7 @@ class FunPayEditor:
             if str(new_lot.fields[fining_fields]) == str(new_fields):
                 return True
             raise fpx_err.FpxLotEditingError("Данные лота на сайте остались старыми")
-        raise fpx_err.FpxRequestError(f"Ошибка изменения лота. Статус: {response.status_code}")
+        raise fpx_err.FpxRequestError(f"Ошибка изменения лота. Статус: {response.json()}")
 
     async def change_lot_short_desc(self, lot_id: int | str, short_desc_ru: str, short_desc_en: str) -> bool:
         """
