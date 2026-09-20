@@ -30,6 +30,34 @@ class TestProfileParser:
         with pytest.raises(fpx_err.FpxNullDataError):
             ProfileParser.parse_finanses("<html><body>Пусто</body></html>")
 
+    def test_parse_2fa_status_enabled(self):
+        html = """
+        <html><body>
+          <h1>Двухфакторная аутентификация</h1>
+          <input type="hidden" name="isEnabled" value="1">
+        </body></html>
+        """
+        assert ProfileParser.parse_2fa_status(html) is True
+
+    def test_parse_2fa_status_disabled(self):
+        html = """
+        <html><body>
+          <h1>Двухфакторная аутентификация</h1>
+          <input type="hidden" name="isEnabled" value="">
+        </body></html>
+        """
+        assert ProfileParser.parse_2fa_status(html) is False
+
+    def test_parse_2fa_status_empty_raises(self):
+        with pytest.raises(fpx_err.FpxNullDataError):
+            ProfileParser.parse_2fa_status("   ")
+
+    def test_parse_2fa_status_unknown_markup_raises(self):
+        with pytest.raises(fpx_err.FpxParseError):
+            ProfileParser.parse_2fa_status(
+                "<html><body>Нет нужного инпута</body></html>"
+            )
+
     def test_parse_profile_success(self):
         """Профиль: лоты + отзывы."""
         html = """
