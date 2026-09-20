@@ -72,6 +72,20 @@ if await fp.account.profile.check_banned():
 
 Возвращает `bool`.
 
+### `await fp.account.profile.get_2fa_status()`
+
+Статус двухфакторной аутентификации аккаунта. Страница настроек: `/security/twoFactorSetting`.
+
+```python
+enabled = await fp.account.profile.get_2fa_status()
+if enabled:
+    print("2FA включена")
+else:
+    print("2FA выключена")
+```
+
+Возвращает `bool`: `True` если 2FA включена, `False` если выключена.
+
 ---
 
 ## Альтернативный доступ через `fpx.services`

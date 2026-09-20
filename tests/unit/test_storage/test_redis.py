@@ -61,8 +61,9 @@ class TestRedisStorageImportGuard:
 
         monkeypatch.setitem(sys.modules, "redis", None)
         monkeypatch.setitem(sys.modules, "redis.asyncio", None)
-        with pytest.raises(ImportError):
+        with pytest.raises(ImportError) as exc:
             redis_module.RedisStorage()
+        assert isinstance(exc.value.__cause__, ImportError)
 
 
 class TestRedisStorageKeyBuilding:

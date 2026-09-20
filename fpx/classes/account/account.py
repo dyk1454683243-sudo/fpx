@@ -97,7 +97,7 @@ class Account:
                 except Exception as e:
                     atts += 1
                     if atts > 3:
-                        raise FpxRefreshCookieError(f"Ошибка обновления куков: {e}")
+                        raise FpxRefreshCookieError(f"Ошибка обновления куков: {e}") from e
                 if ex_time is None:
                     await asyncio.sleep(15)
             await asyncio.sleep(ex_time)
