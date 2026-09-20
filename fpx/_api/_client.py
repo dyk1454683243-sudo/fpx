@@ -32,6 +32,10 @@ class FunPayClient:
         r = await self._account._request_engine.execute("GET", "/account/balance")
         return r.text
 
+    async def get_blocked_page(self) -> httpx.Response:
+        r = await self._account._request_engine.execute("GET", "/account/blocked")
+        return r
+      
     async def get_2fa_settings_page(self) -> str:
         r = await self._account._request_engine.execute("GET", "/security/twoFactorSetting")
         return r.text

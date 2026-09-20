@@ -166,6 +166,28 @@ class ProfileManager:
             raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}") from e
         return cast(Balance, balance)
 
+    async def check_banned(self) -> bool:
+        """
+        Проверяет, заблокирован ли текущий аккаунт.
+
+        FunPay отвечает на GET /account/blocked статусом 200, если аккаунт в бане,
+        и 404, если бана нет.
+
+        Returns:
+            bool: True если аккаунт заблокирован, иначе False.
+        Raises:
+            FpxAuthError: Неверные куки
+            FpxGetProfileError: Ошибка проверки бана
+        """
+        try:
+            step = "запроса данных FunPay"
+            response = await self._account._client.get_blocked_page()
+        except fpx_err.FpxAuthError:
+            raise
+        except Exception as e:
+            raise fpx_err.FpxGetProfileError(f"При проверке бана, выполняя {step} произошла ошибка: {e}")
+        return response.status_code == 200
+      
     async def get_2fa_status(self) -> bool:
         """
         Проверяет, включена ли двухфакторная аутентификация на аккаунте.
