@@ -74,6 +74,9 @@ class Account:
         headers = cookies.headers
         MAX_AGE_RE = re.compile(r"max-age=(\d+)", re.IGNORECASE)
         for raw_cookie in headers.get_list("set-cookie"):
+            if raw_cookie.startswith("PHPSESSID="):
+                # так как csrf токен привязан к сессии надо новый
+                self.data._csrf_token = None
             if raw_cookie.startswith("golden_seal="):
                 match = MAX_AGE_RE.search(raw_cookie)
                 return int(match.group(1)) if match else None
