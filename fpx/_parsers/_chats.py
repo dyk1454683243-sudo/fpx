@@ -117,5 +117,5 @@ class ChatParser(BaseParser):
             result["user-id"] = app_data.get("userId", "")
         except Exception as e:
             logger.debug(f"Ошибка извлечения системных данных чата: {e}")
-            raise fpx_err.FpxParseError("Не удалось распарсить системные метаданные чата (CSRF/User ID)")
+            raise fpx_err.FpxParseError("Не удалось распарсить системные метаданные чата (CSRF/User ID)") from e
         return result

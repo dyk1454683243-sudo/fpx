@@ -45,14 +45,16 @@ class ReviewManager:
         r = await self._account._client.answer_review(self._account.data.user_id, text, order_id)
         try:
             response = r.json()
-        except json.JSONDecodeError:
-            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего")
+        except json.JSONDecodeError as e:
+            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего") from e
         try:
             if text in response["content"]:
                 return True
             raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")
-        except Exception:
-            raise fpx_err.FpxAnswerReviewError(message=response.get("msg") if response.get("msg") else response)
+        except Exception as e:
+            raise fpx_err.FpxAnswerReviewError(
+              message=response.get("msg") if response.get("msg") else response
+            ) from e
 
     async def delete_review(self, order_id: str | int) -> bool:
         """
@@ -76,5 +78,7 @@ class ReviewManager:
             if "content" in response:
                 return True
             raise fpx_err.FpxDeleteReviewError(message="Отзыв не удалён")
-        except Exception:
-            raise fpx_err.FpxDeleteReviewError(message=response.get("msg") if response.get("msg") else response)
+        except Exception as e:
+            raise fpx_err.FpxDeleteReviewError(
+              message=response.get("msg") if response.get("msg") else response
+            ) from e

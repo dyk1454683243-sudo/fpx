@@ -560,6 +560,32 @@ Raises:
     FpxRefundError: Не удалось сделать возврат.
 ```
 
+### `ProfileManager.check_banned`
+
+```
+Проверяет, заблокирован ли текущий аккаунт.
+
+GET /account/blocked: 200 — бан, 404 — бана нет.
+
+Returns:
+    bool: True если аккаунт заблокирован.
+Raises:
+    FpxAuthError: Неверные куки
+    FpxGetProfileError: Ошибка проверки бана
+    
+```
+
+### `ProfileManager.get_2fa_status`
+
+```
+Проверяет, включена ли двухфакторная аутентификация на аккаунте.
+
+Returns:
+    bool: True если 2FA включена, False если выключена.
+Raises:
+    FpxGetProfileError: Ошибка запроса статуса 2FA
+```
+
 ### `ProfileManager.get_balance`
 
 ```
@@ -773,6 +799,12 @@ https://funpay.com/lots/offerEdit?node=...&offer=...
 
 ```
 Парсит https://funpay.com/orders/.../
+```
+
+### `ProfileParser.parse_2fa_status`
+
+```
+Парсит https://funpay.com/security/twoFactorSetting
 ```
 
 ### `ProfileParser.parse_finanses`
