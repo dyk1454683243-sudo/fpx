@@ -16,7 +16,6 @@ logger = logging.getLogger("fpx.profile_parser")
 
 
 class ProfileParser(BaseParser):
-
     @classmethod
     def parse_2fa_status(cls, html_content: str) -> bool:
         """
@@ -26,14 +25,12 @@ class ProfileParser(BaseParser):
         """
         if not html_content or not str(html_content).strip():
             raise fpx_err.FpxNullDataError("Страница настроек 2FA пустая")
-        
+
         soup = BeautifulSoup(html_content, "html.parser")
-        
+
         input_tag = soup.find("input", attrs={"name": "isEnabled"})
         if input_tag is None:
-            raise fpx_err.FpxParseError(
-                "Не удалось определить статус 2FA: input 'isEnabled' не найден на странице."
-            )
+            raise fpx_err.FpxParseError("Не удалось определить статус 2FA: input 'isEnabled' не найден на странице.")
         return input_tag.get("value") == "1"
 
     @classmethod

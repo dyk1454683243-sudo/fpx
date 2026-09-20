@@ -232,8 +232,8 @@ class TestCheckBanned:
         account._client.get_blocked_page.side_effect = Exception("boom")
         with pytest.raises(fpx_err.FpxGetProfileError):
             await manager.check_banned()
-         
-        
+
+
 class TestGet2FAStatus:
     @pytest.mark.asyncio
     async def test_success_enabled(self, manager, account):
@@ -261,8 +261,6 @@ class TestGet2FAStatus:
 
     @pytest.mark.asyncio
     async def test_auth_error_reraised(self, manager, account):
-        account._client.get_2fa_settings_page.side_effect = (
-            fpx_err.FpxAuthError("bad cookies")
-        )
+        account._client.get_2fa_settings_page.side_effect = fpx_err.FpxAuthError("bad cookies")
         with pytest.raises(fpx_err.FpxAuthError):
             await manager.get_2fa_status()

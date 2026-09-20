@@ -56,7 +56,7 @@ class TestSimpleGetEndpoints:
         result = await client.get_blocked_page()
         assert result is response
         account._request_engine.execute.assert_awaited_once_with("GET", "/account/blocked")
-        
+
     @pytest.mark.asyncio
     async def test_get_2fa_settings_page(self, client, account):
         account._request_engine.execute.return_value = make_response(text="2fa-html")

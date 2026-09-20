@@ -185,9 +185,9 @@ class ProfileManager:
         except fpx_err.FpxAuthError:
             raise
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f"При проверке бана, выполняя {step} произошла ошибка: {e}")
+            raise fpx_err.FpxGetProfileError(f"При проверке бана, выполняя {step} произошла ошибка: {e}") from e
         return response.status_code == 200
-      
+
     async def get_2fa_status(self) -> bool:
         """
         Проверяет, включена ли двухфакторная аутентификация на аккаунте.
@@ -205,5 +205,5 @@ class ProfileManager:
         except fpx_err.FpxAuthError:
             raise
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f"При сборе статуса 2FA, выполняя {step} произошла ошибка: {e}")
+            raise fpx_err.FpxGetProfileError(f"При сборе статуса 2FA, выполняя {step} произошла ошибка: {e}") from e
         return bool(enabled)

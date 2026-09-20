@@ -54,9 +54,7 @@ class TestProfileParser:
 
     def test_parse_2fa_status_unknown_markup_raises(self):
         with pytest.raises(fpx_err.FpxParseError):
-            ProfileParser.parse_2fa_status(
-                "<html><body>Нет нужного инпута</body></html>"
-            )
+            ProfileParser.parse_2fa_status("<html><body>Нет нужного инпута</body></html>")
 
     def test_parse_profile_success(self):
         """Профиль: лоты + отзывы."""
