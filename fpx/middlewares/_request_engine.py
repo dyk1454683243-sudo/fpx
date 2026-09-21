@@ -55,7 +55,7 @@ class RequestEngine:
         if not isinstance(body, dict):
             return False
         msg = body.get("msg")
-        return body.get("error") == _CSRF_ERROR_CODE or (isinstance(msg, str) and _CSRF_ERROR_HINT in msg)
+        return int(body.get("error")) == _CSRF_ERROR_CODE or (isinstance(msg, str) and _CSRF_ERROR_HINT in msg)
 
     async def execute(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         if method.upper() not in _WRITE_METHODS:
