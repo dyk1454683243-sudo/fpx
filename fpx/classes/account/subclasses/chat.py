@@ -187,7 +187,7 @@ class ChatManager:
             step = f"POST запрос на блокировку чата ID {node_id}"
             response = await self._account._client.ban_chat(node_id)
         except Exception as e:
-            raise fpx_err.FpxBanChatError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxBanChatError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         if response.get("error") is None:
             return True
         error_code = response.get("error", "400")
