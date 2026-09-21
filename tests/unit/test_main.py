@@ -89,6 +89,31 @@ class TestShutdown:
         assert tools._client.is_closed is True
 
     @pytest.mark.asyncio
+    async def test_shutdown_cancels_polling_task(self):
+        tools = FunPayTools(TEST_GKEY)
+        if tools._refresh_task and not tools._refresh_task.done():
+            tools._refresh_task.cancel()
+            try:
+                await tools._refresh_task
+            except asyncio.CancelledError:
+                pass
+            tools._refresh_task = None
+
+        async def hang(*args, **kwargs):
+            await asyncio.sleep(3600)
+
+        tools.runner._run_loop = hang
+        task = await tools.runner.start_polling(timer=10, is_background=True)
+        assert tools.polling_task is task
+        await tools.shutdown()
+        assert tools.runner.is_running is False
+        assert task.done()
+
+    def test_polling_task_is_none_before_start(self):
+        tools = FunPayTools(TEST_GKEY)
+        assert tools.polling_task is None
+    
+    @pytest.mark.asyncio
     async def test_shutdown_does_not_close_caller_owned_client(self):
         http_client = httpx.AsyncClient()
         try:
