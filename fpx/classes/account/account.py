@@ -74,6 +74,9 @@ class Account:
         headers = cookies.headers
         MAX_AGE_RE = re.compile(r"max-age=(\d+)", re.IGNORECASE)
         for raw_cookie in headers.get_list("set-cookie"):
+            if raw_cookie.startswith("PHPSESSID="):
+                # так как csrf токен привязан к сессии надо новый
+                self.data._csrf_token = None
             if raw_cookie.startswith("golden_seal="):
                 match = MAX_AGE_RE.search(raw_cookie)
                 return int(match.group(1)) if match else None
@@ -97,7 +100,7 @@ class Account:
                 except Exception as e:
                     atts += 1
                     if atts > 3:
-                        raise FpxRefreshCookieError(f"Ошибка обновления куков: {e}")
+                        raise FpxRefreshCookieError(f"Ошибка обновления куков: {e}") from e
                 if ex_time is None:
                     await asyncio.sleep(15)
             await asyncio.sleep(ex_time)

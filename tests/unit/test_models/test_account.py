@@ -64,6 +64,17 @@ class TestAccountModels:
         assert args[1] == "Заказ 10 готов!"
 
     @pytest.mark.asyncio
+    async def test_order_answer_keeps_literal_braces(self):
+        order = Order(order_id="10", order_time="12:00", client_name="Иван", name="Товар", chat_id="chat-10")
+        mock_client = MagicMock()
+        mock_client._account.chat.send_message = AsyncMock(return_value=True)
+        order._client = mock_client
+        result = await order.answer("Спасибо, {client_name}! Держите промокод {SALE50} и цену {100}")
+        assert result is True
+        args = mock_client._account.chat.send_message.call_args[0]
+        assert args[1] == "Спасибо, Иван! Держите промокод {SALE50} и цену {100}"
+
+    @pytest.mark.asyncio
     async def test_purchase_answer_with_mock_client(self):
         order = Purchase(order_id="10", order_time="12:00", client_name="Продавец", name="Товар", chat_id="chat-10")
         mock_client = MagicMock()
@@ -75,6 +86,17 @@ class TestAccountModels:
         assert args[1] == "Заказ 10 готов!"
 
     @pytest.mark.asyncio
+    async def test_purchase_answer_keeps_literal_braces(self):
+        order = Purchase(order_id="10", order_time="12:00", client_name="Продавец", name="Товар", chat_id="chat-10")
+        mock_client = MagicMock()
+        mock_client._account.chat.send_message = AsyncMock(return_value=True)
+        order._client = mock_client
+        result = await order.answer("Заказ {order_id}: промо {SALE50}")
+        assert result is True
+        args = mock_client._account.chat.send_message.call_args[0]
+        assert args[1] == "Заказ 10: промо {SALE50}"
+
+    @pytest.mark.asyncio
     async def test_cur_review_answer_with_mock_client(self):
         order = Order(order_id="99", name="Товар", order_time="12:00")
         review = CurReview(text="OK", stars=5, author="User", order_id="99", order=order)
@@ -84,3 +106,24 @@ class TestAccountModels:
         result = await review.answer("Спасибо, {author}!")
         assert result is True
         mock_client._account.review.review_answer.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_cur_review_delete_with_mock_client(self):
+        review = CurReview(text="OK", stars=5, author="User", order_id="99")
+        mock_client = MagicMock()
+        mock_client._account.review.delete_review = AsyncMock(return_value=True)
+        review._client = mock_client
+        result = await review.delete()
+        assert result is True
+        mock_client._account.review.delete_review.assert_awaited_once_with("99")
+
+    @pytest.mark.asyncio
+    async def test_cur_review_answer_keeps_literal_braces(self):
+        order = Order(order_id="99", name="Товар", order_time="12:00")
+        review = CurReview(text="OK", stars=5, author="User", order_id="99", order=order)
+        mock_client = MagicMock()
+        mock_client._account.review.review_answer = AsyncMock(return_value=True)
+        review._client = mock_client
+        result = await review.answer("Спасибо, {author}! Промокод {SALE50}")
+        assert result is True
+        mock_client._account.review.review_answer.assert_awaited_once_with("99", "Спасибо, User! Промокод {SALE50}")

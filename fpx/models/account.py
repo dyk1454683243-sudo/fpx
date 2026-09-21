@@ -5,6 +5,7 @@ from typing import Any, Optional, cast
 
 from fpx.models.lots import LotInfo
 from fpx.utils import errors as fpx_err
+from fpx.utils.formatting import safe_format
 
 
 @dataclass
@@ -37,7 +38,8 @@ class CurReview:
             raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
         if not self.order:
             raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")
-        formatted_reply = answer_text.format(
+        formatted_reply = safe_format(
+            answer_text,
             author=self.author,
             order_id=self.order_id,
             order_name=self.order.name,
@@ -52,7 +54,8 @@ class CurReview:
             raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
         if not self.order:
             raise fpx_err.FpxAttributeError("В объект не передан аттрибут Order")
-        formatted_reply = message_text.format(
+        formatted_reply = safe_format(
+            message_text,
             author=self.author,
             order_id=self.order_id,
             order_name=self.order.name,
@@ -60,6 +63,12 @@ class CurReview:
             stars=self.stars,
         )
         return cast(bool, await self._client._account.chat.send_message(self.order.chat_id, formatted_reply))
+
+    async def delete(self) -> bool:
+        """Удалить отзыв или ответ на отзыв"""
+        if not self._client:
+            raise fpx_err.FpxClientNotAttachedError("Объект CurReview не привязан к клиенту fpx")
+        return cast(bool, await self._client._account.review.delete_review(self.order_id))
 
 
 @dataclass
@@ -96,8 +105,12 @@ class Order:
         """Ответить в этот же чат"""
         if not self._client:
             raise fpx_err.FpxClientNotAttachedError("Объект Order не привязан к клиенту fpx")
-        formatted_reply = answer_text.format(
-            order_id=self.order_id, order_time=self.order_time, client_name=self.client_name, order_name=self.name
+        formatted_reply = safe_format(
+            answer_text,
+            order_id=self.order_id,
+            order_time=self.order_time,
+            client_name=self.client_name,
+            order_name=self.name,
         )
         return cast(bool, await self._client._account.chat.send_message(self.chat_id, formatted_reply))
 
@@ -129,8 +142,12 @@ class Purchase:
         """Ответить в этот же чат"""
         if not self._client:
             raise fpx_err.FpxClientNotAttachedError("Объект Purchase не привязан к клиенту fpx")
-        formatted_reply = answer_text.format(
-            order_id=self.order_id, order_time=self.order_time, client_name=self.client_name, order_name=self.name
+        formatted_reply = safe_format(
+            answer_text,
+            order_id=self.order_id,
+            order_time=self.order_time,
+            client_name=self.client_name,
+            order_name=self.name,
         )
         return cast(bool, await self._client._account.chat.send_message(self.chat_id, formatted_reply))
 

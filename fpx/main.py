@@ -13,6 +13,18 @@ from fpx.utils.errors import FpxAuthError
 GKEY_PATTERN = re.compile(r"^[a-z0-9]{32}$")
 
 
+def _close_async_client_sync(client: httpx.AsyncClient) -> None:
+    """Закрыть AsyncClient из синхронного кода (ошибка в FunPayTools.__init__)."""
+    if client.is_closed:
+        return
+    try:
+        running_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(client.aclose())
+        return
+    running_loop.create_task(client.aclose())
+
+
 class FunPayTools:
     def __init__(
         self,
@@ -40,6 +52,9 @@ class FunPayTools:
                 "http://": httpx.AsyncHTTPTransport(proxy=proxy),
                 "https://": httpx.AsyncHTTPTransport(proxy=proxy),
             }
+        # Закрываем клиент только если создали его сами — чужой пул оставляем вызывающему коду.
+        self._owns_http_client = http_client is None
+        self._refresh_task: asyncio.Task[Any] | None = None
         if http_client:
             self._client = http_client
             self._client.cookies.update(self._cookies)
@@ -55,22 +70,31 @@ class FunPayTools:
                 timeout=httpx.Timeout(15.0),
                 mounts=mounts,
             )
-        # TODO(#20): Account(...) станет типизированным вызовом после аннотации fpx/classes/account/account.py
-        self.account = Account(self._client)  # type: ignore[no-untyped-call]
-        # TODO(#17): Runner(...) станет типизированным вызовом после аннотации fpx/classes/runner/runner.py
-        self.runner = Runner(self.account)  # type: ignore[no-untyped-call]
-        self.router = self.runner.router
-        self.account._request_engine.runner = self.runner
-        self.storage = storage or MemoryStorage()
-        self.runner.storage = self.storage
-        self._refresh_task: asyncio.Task[Any] | None = None
-
         try:
-            loop = asyncio.get_running_loop()
-            # TODO(#20): refresh_cookies_cycle станет типизированным вызовом после аннотации fpx/classes/account
-            self._refresh_task = loop.create_task(self.account.refresh_cookies_cycle())  # type: ignore[no-untyped-call]
-        except RuntimeError:
-            pass
+            # TODO(#20): Account(...) станет типизированным вызовом после аннотации fpx/classes/account/account.py
+            self.account = Account(self._client)  # type: ignore[no-untyped-call]
+            # TODO(#17): Runner(...) станет типизированным вызовом после аннотации fpx/classes/runner/runner.py
+            self.runner = Runner(self.account)  # type: ignore[no-untyped-call]
+            self.router = self.runner.router
+            self.account._request_engine.runner = self.runner
+            self.storage = storage or MemoryStorage()
+            self.runner.storage = self.storage
+
+            try:
+                loop = asyncio.get_running_loop()
+                # TODO(#20): refresh_cookies_cycle станет типизированным вызовом после аннотации fpx/classes/account
+                self._refresh_task = loop.create_task(self.account.refresh_cookies_cycle())  # type: ignore[no-untyped-call]
+            except RuntimeError:
+                pass
+        except Exception:
+            if self._refresh_task is not None and not self._refresh_task.done():
+                self._refresh_task.cancel()
+            if self._owns_http_client:
+                try:
+                    _close_async_client_sync(self._client)
+                except Exception:
+                    pass
+            raise
 
     async def __aenter__(self) -> "FunPayTools":
         # TODO(#20): refresh_cookies_cycle станет типизированным вызовом после аннотации fpx/classes/account
@@ -102,5 +126,5 @@ class FunPayTools:
                 pass
         if hasattr(self, "runner"):
             await self.runner.stop_polling()
-        if self._client and not self._client.is_closed:
+        if self._owns_http_client and self._client and not self._client.is_closed:
             await self._client.aclose()

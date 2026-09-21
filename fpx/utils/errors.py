@@ -119,6 +119,13 @@ class FpxAnswerReviewError(FpxAccountError):
         super().__init__(message)
 
 
+class FpxDeleteReviewError(FpxAccountError):
+    """Ошибка при удалении отзыва или ответа на отзыв."""
+
+    def __init__(self, message: str = "Ошибка удаления отзыва") -> None:
+        super().__init__(message)
+
+
 class FpxClientNotAttachedError(FpxAccountError):
     """Объект контекста не привязан к главному клиенту fpx."""
 
@@ -144,6 +151,13 @@ class FpxGetChatDataError(FpxAccountError):
     """Ошибка запроса данных чата"""
 
     def __init__(self, message: str = "Ошибка запроса данных чата") -> None:
+        super().__init__(message)
+
+
+class FpxBanChatError(FpxAccountError):
+    """Ошибка при блокировке чата."""
+
+    def __init__(self, message: str = "Не удалось заблокировать чат") -> None:
         super().__init__(message)
 
 

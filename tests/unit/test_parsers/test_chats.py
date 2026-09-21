@@ -1,5 +1,7 @@
 """Тесты ChatParser — парсинг списка чатов и переписки."""
 
+import json
+
 import pytest
 
 from fpx._parsers._chats import ChatParser
@@ -64,6 +66,7 @@ class TestChatParser:
         </body></html>
         """
         result = ChatParser.parse_chat(html)
+        assert result["data-id"] == "123"
         assert "messages" in result
         msgs = result["messages"]
         for msg in msgs:
@@ -96,3 +99,14 @@ class TestChatParser:
         """HTML без блока чата → FpxNullDataError."""
         with pytest.raises(fpx_err.FpxNullDataError):
             ChatParser.parse_chat("<html><body>Нет чата</body></html>")
+
+    def test_parse_chat_invalid_app_data_chains_cause(self):
+        """Сломанный data-app-data → FpxParseError с исходным JSONDecodeError в __cause__."""
+        html = """
+        <html><body data-app-data="not-json">
+          <div class="chat" data-name="users-1-2"></div>
+        </body></html>
+        """
+        with pytest.raises(fpx_err.FpxParseError) as exc:
+            ChatParser.parse_chat(html)
+        assert isinstance(exc.value.__cause__, json.JSONDecodeError)

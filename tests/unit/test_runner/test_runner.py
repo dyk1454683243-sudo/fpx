@@ -213,9 +213,10 @@ class TestRunLoop:
             raise ValueError("unexpected")
 
         runner._cache_runner = cache_runner
-        with pytest.raises(fpx_err.FpxCriticalRunnerError) as exc_info:
+        with pytest.raises(fpx_err.FpxCriticalRunnerError) as exc:
             await runner._run_loop(1)
-        assert isinstance(exc_info.value.__cause__, ValueError)
+        assert isinstance(exc.value.__cause__, ValueError)
+        assert str(exc.value.__cause__) == "unexpected"
         assert runner.is_running is False
 
     @pytest.mark.asyncio

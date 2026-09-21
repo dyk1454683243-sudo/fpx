@@ -9,28 +9,84 @@ if TYPE_CHECKING:
     from fpx.classes.runner.runner import Runner
 
 
+_WRITE_METHODS = ("POST", "PUT", "DELETE")
+_CSRF_ERROR_CODE = 1
+_CSRF_ERROR_HINT = "Обновите страницу"
+
+
 class RequestEngine:
     def __init__(self, account: Any, client: httpx.AsyncClient) -> None:
-        # account: Account (см. fpx/classes/account/account.py). Оставлен как Any,
-        # так как сам класс Account ещё не аннотирован (отдельная задача #20).
         self._account = account
         self._client = client
         self.runner: "Runner | None" = None
+        self._csrf_lock = asyncio.Lock()
 
-    async def execute(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
-        attempts = 3
-        backoff = 1.5  # множитель времени ожидания
-        if method.upper() in ("POST", "PUT", "DELETE"):
-            if "data" not in kwargs:
-                kwargs["data"] = {}
-            if "headers" not in kwargs:
-                kwargs["headers"] = {}
+    async def _ensure_csrf_token(self) -> None:
+        if self._account.data._csrf_token is not None:
+            return
+        async with self._csrf_lock:
             if self._account.data._csrf_token is None:
                 await self._account.profile.get_user_data()
-            if "csrf_token" not in kwargs["data"]:
-                kwargs["data"]["csrf_token"] = self._account.data._csrf_token
-            if "X-Cp-Csrf-Token" not in kwargs["headers"]:
-                kwargs["headers"]["X-Cp-Csrf-Token"] = self._account.data._csrf_token
+
+    async def _refresh_csrf_token(self, stale_token: str | None) -> bool:
+        """Перезапрашивает csrf-токен, если он всё ещё равен ``stale_token``.
+
+        csrf токен фанпея привязан к сессии (PHPSESSID). Сессия может смениться,
+        после чего старый токен перестаёт подходить.
+        Если параллельный запрос уже обновил токен, повторно
+        ходить на главную не нужно - просто берём свежий.
+
+        Returns:
+            bool: True, если актуальный токен отличается от ``stale_token``
+                (то есть запрос имеет смысл повторить).
+        """
+        async with self._csrf_lock:
+            if self._account.data._csrf_token == stale_token:
+                self._account.data._csrf_token = None
+                await self._account.profile.get_user_data()
+            return self._account.data._csrf_token not in (None, stale_token)
+
+    @staticmethod
+    def _is_csrf_error(response: httpx.Response) -> bool:
+        try:
+            body = response.json()
+        except Exception:
+            return False
+        if not isinstance(body, dict):
+            return False
+        msg = body.get("msg")
+        error_code = int(body.get("error")) if body.get("error") else 0
+        return error_code == _CSRF_ERROR_CODE or (isinstance(msg, str) and _CSRF_ERROR_HINT in msg)
+
+    async def execute(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        if method.upper() not in _WRITE_METHODS:
+            return await self._send(method, url, **kwargs)
+
+        data = dict(kwargs.get("data") or {})
+        headers = dict(kwargs.get("headers") or {})
+        own_data_token = "csrf_token" in data
+        own_header_token = "X-Cp-Csrf-Token" in headers
+
+        def with_csrf(token: str | None) -> dict[str, Any]:
+            return {
+                **kwargs,
+                "data": data if own_data_token else {**data, "csrf_token": token},
+                "headers": headers if own_header_token else {**headers, "X-Cp-Csrf-Token": token},
+            }
+
+        await self._ensure_csrf_token()
+        used_token = self._account.data._csrf_token
+        response = await self._send(method, url, **with_csrf(used_token))
+
+        if (own_data_token and own_header_token) or not self._is_csrf_error(response):
+            return response
+        if not await self._refresh_csrf_token(used_token):
+            return response
+        return await self._send(method, url, **with_csrf(self._account.data._csrf_token))
+
+    async def _send(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        attempts = 3
+        backoff = 1.5  # множитель времени ожидания
         for attempt in range(attempts):
             try:
                 response = await self._client.request(method, url, **kwargs)
@@ -58,14 +114,14 @@ class RequestEngine:
             except httpx.ReadTimeout as e:
                 if method.upper() == "GET":
                     if attempt == attempts - 1:
-                        raise e
+                        raise
                     await asyncio.sleep(backoff**attempt)
                 else:
                     raise fpx_err.FpxRequestError(
                         message=f"POST запрос упал по таймауту ответаВозможно действие выполнилось: {e}"
-                    )
-            except (httpx.ConnectTimeout, httpx.ConnectError) as e:
+                    ) from e
+            except (httpx.ConnectTimeout, httpx.ConnectError):
                 if attempt == attempts - 1:
-                    raise e
+                    raise
                 await asyncio.sleep(backoff**attempt)
         raise fpx_err.FpxRequestError(message=f"Превышено количество попыток запроса к {url}")

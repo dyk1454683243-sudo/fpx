@@ -17,10 +17,12 @@ FpxError
 │   ├── FpxRequestError
 │   ├── FpxLotEditingError
 │   ├── FpxAnswerReviewError
+│   ├── FpxDeleteReviewError
 │   ├── FpxClientNotAttachedError
 │   ├── FpxGetGameIDError
 │   ├── FpxGetLastCategoryLotError
 │   ├── FpxGetChatDataError
+│   ├── FpxBanChatError
 │   ├── FpxGetLotEditorInfoError
 │   ├── FpxGetLotInfoError
 │   ├── FpxGetOrderInfoError
@@ -63,10 +65,12 @@ FpxError
 | `FpxRequestError` | Сеть упала, сервер не ответил, превышены попытки |
 | `FpxLotEditingError` | Цена не поменялась после редактирования |
 | `FpxAnswerReviewError` | Ответ на отзыв не сохранился |
+| `FpxDeleteReviewError` | Отзыв или ответ на отзыв не удалось удалить |
 | `FpxClientNotAttachedError` | Попытка вызвать `.answer()` у объекта без привязки к клиенту |
 | `FpxGetGameIDError` | Не удалось получить `game_id` категории |
 | `FpxGetLastCategoryLotError` | Не удалось получить последний лот в категории |
 | `FpxGetChatDataError` | Не удалось получить технические данные чата |
+| `FpxBanChatError` | Не удалось заблокировать чат |
 | `FpxGetLotEditorInfoError` | Не удалось получить данные формы редактора лота |
 | `FpxGetLotInfoError` | Не удалось получить информацию о лоте |
 | `FpxGetOrderInfoError` | Не удалось получить информацию о заказе |

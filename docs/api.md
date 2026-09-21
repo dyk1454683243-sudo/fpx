@@ -409,6 +409,23 @@ Raises:
     FpxMessageNotDelivered: Если не удалось отправить сообщение.
 ```
 
+### `ChatManager.ban_chat`
+
+```
+Блокирует чат (кнопка «Заблокировать» в шапке чата FunPay).
+FunPay выполняет блокировку через POST /chat/mute с mute=1.
+
+Args:
+    chat_id (int | str): ID чата (node / data-id). Если передан
+        системный users-..., числовой data-id берётся со страницы чата.
+
+Returns:
+    bool: True если чат заблокирован.
+
+Raises:
+    FpxBanChatError: Не удалось заблокировать чат.
+```
+
 ### `FpxAccountError`
 
 ```
@@ -576,6 +593,32 @@ Raises:
     FpxRefundError: Не удалось сделать возврат.
 ```
 
+### `ProfileManager.check_banned`
+
+```
+Проверяет, заблокирован ли текущий аккаунт.
+
+GET /account/blocked: 200 — бан, 404 — бана нет.
+
+Returns:
+    bool: True если аккаунт заблокирован.
+Raises:
+    FpxAuthError: Неверные куки
+    FpxGetProfileError: Ошибка проверки бана
+    
+```
+
+### `ProfileManager.get_2fa_status`
+
+```
+Проверяет, включена ли двухфакторная аутентификация на аккаунте.
+
+Returns:
+    bool: True если 2FA включена, False если выключена.
+Raises:
+    FpxGetProfileError: Ошибка запроса статуса 2FA
+```
+
 ### `ProfileManager.get_balance`
 
 ```
@@ -672,6 +715,19 @@ Raises:
     FpxAnswerReviewError: При ошибке (ответ не совпадает заданному/сервер не вернул ничего).
 ```
 
+### `ReviewManager.delete_review`
+
+```
+Удаляет отзыв или ответ на отзыв.
+
+Args:
+    order_id (str | int): ID заказа, отзыв (или ответ на отзыв) которого хотите удалить.
+Returns:
+    bool: True при успехе
+Raises:
+    FpxDeleteReviewError: При ошибке (сервер не вернул виджет отзыва / сервер не вернул ничего).
+```
+
 ## Модели данных
 
 ### `Chat`
@@ -695,6 +751,12 @@ is_unread: Readed or not
 
 ```
 Ответить на отзыв в чате
+```
+
+### `CurReview.delete`
+
+```
+Удалить отзыв или ответ на отзыв
 ```
 
 ### `Message.answer`
@@ -772,6 +834,12 @@ https://funpay.com/lots/offerEdit?node=...&offer=...
 Парсит https://funpay.com/orders/.../
 ```
 
+### `ProfileParser.parse_2fa_status`
+
+```
+Парсит https://funpay.com/security/twoFactorSetting
+```
+
 ### `ProfileParser.parse_finanses`
 
 ```
@@ -842,6 +910,12 @@ https://funpay.com/lots/offerEdit?node=...&offer=...
 Неправильно переданы аттрибуты.
 ```
 
+### `FpxBanChatError`
+
+```
+Ошибка при блокировке чата.
+```
+
 ### `FpxClientNotAttachedError`
 
 ```
@@ -852,6 +926,12 @@ https://funpay.com/lots/offerEdit?node=...&offer=...
 
 ```
 Вызывается, когда функция команды ожидает аргументы, но в сообщении их передали меньше, чем нужно.
+```
+
+### `FpxDeleteReviewError`
+
+```
+Ошибка при удалении отзыва или ответа на отзыв.
 ```
 
 ### `FpxError`

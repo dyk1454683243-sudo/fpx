@@ -45,11 +45,36 @@ class ReviewManager:
         r = await self._account._client.answer_review(self._account.data.user_id, text, order_id)
         try:
             response = r.json()
-        except json.JSONDecodeError:
-            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего")
+        except json.JSONDecodeError as e:
+            raise fpx_err.FpxAnswerReviewError("Сервер не вернул ничего") from e
         try:
             if text in response["content"]:
                 return True
             raise fpx_err.FpxAnswerReviewError(message="Ответ не сохранился")
-        except Exception:
-            raise fpx_err.FpxAnswerReviewError(message=response.get("msg") if response.get("msg") else response)
+        except Exception as e:
+            raise fpx_err.FpxAnswerReviewError(message=response.get("msg") if response.get("msg") else response) from e
+
+    async def delete_review(self, order_id: str | int) -> bool:
+        """
+        Удаляет отзыв или ответ на отзыв.
+
+        Args:
+            order_id (str | int): ID заказа, отзыв (или ответ на отзыв) которого хотите удалить.
+        Returns:
+            bool: True при успехе
+        Raises:
+            FpxDeleteReviewError: При ошибке (сервер не вернул виджет отзыва / сервер не вернул ничего).
+        """
+        if self._account.data.user_id is None:
+            await self._account.profile.get_user_data()
+        r = await self._account._client.delete_review(self._account.data.user_id, order_id)
+        try:
+            response = r.json()
+        except json.JSONDecodeError as e:
+            raise fpx_err.FpxDeleteReviewError("Сервер не вернул ничего") from e
+        try:
+            if "content" in response:
+                return True
+            raise fpx_err.FpxDeleteReviewError(message="Отзыв не удалён")
+        except Exception as e:
+            raise fpx_err.FpxDeleteReviewError(message=response.get("msg") if response.get("msg") else response) from e

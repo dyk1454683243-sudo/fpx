@@ -63,3 +63,27 @@ class TestUploadImage:
         result = await account.upload_image(str(file_path))
         assert result == 777
         account._client.upload_image.assert_awaited_once_with(b"fake-image-bytes")
+
+
+class TestRefreshCookiesCsrf:
+    @staticmethod
+    def _account_with_set_cookie(set_cookies):
+        import httpx
+
+        account = Account(MagicMock())
+        account.data._csrf_token = "cached"
+        response = httpx.Response(200, headers=[("set-cookie", c) for c in set_cookies])
+        account._client.refresh_session_cookies = AsyncMock(return_value=response)
+        return account
+
+    @pytest.mark.asyncio
+    async def test_new_phpsessid_invalidates_csrf_token(self):
+        account = self._account_with_set_cookie(["PHPSESSID=abc; path=/", "golden_seal=x; max-age=604800; path=/"])
+        assert await account._refresh_cookies() == 604800
+        assert account.data._csrf_token is None
+
+    @pytest.mark.asyncio
+    async def test_csrf_token_kept_when_session_not_rotated(self):
+        account = self._account_with_set_cookie(["golden_seal=x; max-age=604800; path=/"])
+        assert await account._refresh_cookies() == 604800
+        assert account.data._csrf_token == "cached"
