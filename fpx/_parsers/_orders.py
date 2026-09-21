@@ -88,7 +88,7 @@ class OrderParser(BaseParser):
         except fpx_err.FpxParseError:
             raise
         except Exception as e:
-            raise fpx_err.FpxParseError(f"Ошибка парсинга страницы заказа: {e}")
+            raise fpx_err.FpxParseError(f"Ошибка парсинга страницы заказа: {e}") from e
         return result
 
     @classmethod
@@ -129,8 +129,8 @@ class OrderParser(BaseParser):
                 return [
                     {"filtration": "все", "price": lot_price, "offer_id": offer_id, "owner_username": owner_username}
                 ]
-            except Exception:
-                raise fpx_err.FpxParseError("Не удалось распарсить категорию без фильтров.")
+            except Exception as e:
+                raise fpx_err.FpxParseError("Не удалось распарсить категорию без фильтров.") from e
         for lot in lots:
             lot_f_values = [str(val).strip().lower() for key, val in lot.attrs.items() if key.startswith("data-f-")]
             for f in filters:

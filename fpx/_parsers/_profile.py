@@ -17,6 +17,23 @@ logger = logging.getLogger("fpx.profile_parser")
 
 class ProfileParser(BaseParser):
     @classmethod
+    def parse_2fa_status(cls, html_content: str) -> bool:
+        """
+        Парсит https://funpay.com/security/twoFactorSetting
+        Чекает хайден инпуты /security/twoFactorSetting: если 2FA выключена, isEnabled value=,
+        если включена - value=1.
+        """
+        if not html_content or not str(html_content).strip():
+            raise fpx_err.FpxNullDataError("Страница настроек 2FA пустая")
+
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        input_tag = soup.find("input", attrs={"name": "isEnabled"})
+        if input_tag is None:
+            raise fpx_err.FpxParseError("Не удалось определить статус 2FA: input 'isEnabled' не найден на странице.")
+        return input_tag.get("value") == "1"
+
+    @classmethod
     def parse_finanses(cls, html_content: str) -> Balance:
         """Парсит https://funpay.com/account/balance"""
         soup = BeautifulSoup(html_content, "html.parser")
@@ -216,6 +233,6 @@ class ProfileParser(BaseParser):
             app_data_str = cls._get_str_attr(body, "data-app-data", "{}")
             app_data = json.loads(app_data_str)
             result["csrf-token"] = app_data.get("csrf-token", "")
-        except Exception:
-            raise fpx_err.FpxParseError("Не удалось распарсить csrf_token из data-app-data.")
+        except Exception as e:
+            raise fpx_err.FpxParseError("Не удалось распарсить csrf_token из data-app-data.") from e
         return result

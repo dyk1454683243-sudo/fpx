@@ -19,8 +19,8 @@ class RedisStorage(BaseStorage):
             # import-not-found, если пакет не установлен вовсе, или import-untyped,
             # если установлен, но без разметки типов. Игнорируем оба случая.
             from redis.asyncio import Redis  # type: ignore
-        except ImportError:
-            raise ImportError("Redis не установлен. Установи: pip install fpx-engine[redis]")
+        except ImportError as e:
+            raise ImportError("Redis не установлен. Установи: pip install fpx-engine[redis]") from e
         self._redis = Redis.from_url(url, decode_responses=True)
         self._prefix = prefix
 
