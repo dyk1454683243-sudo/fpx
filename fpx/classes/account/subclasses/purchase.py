@@ -34,7 +34,7 @@ class PurchaseManager:
             order_args.pop("_client")
             purchase = Purchase(**order_args)
         except Exception as e:
-            raise fpx_err.FpxGetPurchaseInfoError(str(e))
+            raise fpx_err.FpxGetPurchaseInfoError(str(e)) from e
         return purchase
 
     async def get_my_purchases(self, limit: int = 0) -> list[Order]:
@@ -82,7 +82,7 @@ class PurchaseManager:
                     break
                 await asyncio.sleep(3)
         except Exception as e:
-            raise fpx_err.FpxGetUserPurchasesError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetUserPurchasesError(f"При выполнении {stage} произошла ошибка: {e}") from e
         if limit > 0:
             counter += 1
         result: list[Order] = []

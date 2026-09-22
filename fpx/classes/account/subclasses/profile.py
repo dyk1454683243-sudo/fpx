@@ -34,7 +34,7 @@ class ProfileManager:
             self._account.data._csrf_token = data["csrf-token"]
             user_data = UserData(csrf_token=data["csrf-token"], user_id=data["user-id"])
         except Exception as e:
-            raise fpx_err.FpxGetUserDataError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetUserDataError(f"При выполнении {stage} произошла ошибка: {e}") from e
         return user_data
 
     async def get_my_sells(self, limit: int = 0) -> list[Order]:
@@ -82,7 +82,7 @@ class ProfileManager:
                     break
                 await asyncio.sleep(3)
         except Exception as e:
-            raise fpx_err.FpxGetUserSellsError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetUserSellsError(f"При выполнении {stage} произошла ошибка: {e}") from e
         if limit > 0:
             counter += 1
         result: list[Order] = []
@@ -140,7 +140,7 @@ class ProfileManager:
             ]
             profile = Profile(category_ids=data["category-ids"], lots=lots_list, reviews=reviews)
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f"При выполнении {step} произошла ошибка: {e}")
+            raise fpx_err.FpxGetProfileError(f"При выполнении {step} произошла ошибка: {e}") from e
         return profile
 
     async def get_balance(self) -> Balance:
@@ -163,5 +163,47 @@ class ProfileManager:
         except fpx_err.FpxAuthError:
             raise
         except Exception as e:
-            raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}")
+            raise fpx_err.FpxGetProfileError(f"При сборе баланса, выполняя {step} произошла ошибка: {e}") from e
         return cast(Balance, balance)
+
+    async def check_banned(self) -> bool:
+        """
+        Проверяет, заблокирован ли текущий аккаунт.
+
+        FunPay отвечает на GET /account/blocked статусом 200, если аккаунт в бане,
+        и 404, если бана нет.
+
+        Returns:
+            bool: True если аккаунт заблокирован, иначе False.
+        Raises:
+            FpxAuthError: Неверные куки
+            FpxGetProfileError: Ошибка проверки бана
+        """
+        try:
+            step = "запроса данных FunPay"
+            response = await self._account._client.get_blocked_page()
+        except fpx_err.FpxAuthError:
+            raise
+        except Exception as e:
+            raise fpx_err.FpxGetProfileError(f"При проверке бана, выполняя {step} произошла ошибка: {e}")
+        return response.status_code == 200
+      
+    async def get_2fa_status(self) -> bool:
+        """
+        Проверяет, включена ли двухфакторная аутентификация на аккаунте.
+
+        Returns:
+            bool: True если 2FA включена, False если выключена.
+        Raises:
+            FpxGetProfileError: Ошибка запроса статуса 2FA
+        """
+        try:
+            step = "запрос данных FunPay"
+            html = await self._account._client.get_2fa_settings_page()
+            step = "парсинг данных"
+            enabled = self._account._parser.parse_2fa_status(html)
+        except fpx_err.FpxAuthError:
+            raise
+        except Exception as e:
+            raise fpx_err.FpxGetProfileError(f"При сборе статуса 2FA, выполняя {step} произошла ошибка: {e}")
+        return bool(enabled)

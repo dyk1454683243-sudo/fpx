@@ -32,6 +32,14 @@ class FunPayClient:
         r = await self._account._request_engine.execute("GET", "/account/balance")
         return r.text
 
+    async def get_blocked_page(self) -> httpx.Response:
+        r = await self._account._request_engine.execute("GET", "/account/blocked")
+        return r
+      
+    async def get_2fa_settings_page(self) -> str:
+        r = await self._account._request_engine.execute("GET", "/security/twoFactorSetting")
+        return r.text
+
     async def send_message_request(self, node_name: str, last_msg: int, text: str) -> dict[str, Any]:
         request_data = {
             "action": "chat_message",
@@ -164,6 +172,14 @@ class FunPayClient:
         response = await self._account._request_engine.execute("POST", "/orders/review", data=payload, headers=headers)
         return response
 
+    async def delete_review(self, authorid: str, orderid: str) -> Any:
+        payload = {"authorId": authorid, "orderId": orderid}
+        headers = {"X-Requested-With": "XMLHttpRequest"}
+        response = await self._account._request_engine.execute(
+            "POST", "/orders/reviewDelete", data=payload, headers=headers
+        )
+        return response
+
     async def get_chip_category(self, chip_category_id: str | int) -> str:
         r = await self._account._request_engine.execute("GET", f"/chips/{chip_category_id}/")
         return r.text
@@ -174,24 +190,30 @@ class FunPayClient:
 
     async def upload_image(self, file_bytes: bytes) -> dict[str, Any]:
         headers = {"X-Requested-With": "XMLHttpRequest"}
-        r = await self.client.request(
+        r = await self._account._request_engine.execute(
             "POST", "/file/addChatImage", files={"file": ("image.png", file_bytes, "image/png")}, headers=headers
         )
         return r.json()
 
     async def find_category(self, target: str) -> dict[str, Any]:
         headers = {"X-Requested-With": "XMLHttpRequest"}
-        r = await self.client.request("POST", "/games/promoFilter", data={"query": target}, headers=headers)
+        r = await self._account._request_engine.execute(
+            "POST", "/games/promoFilter", data={"query": target}, headers=headers
+        )
         return r.json()
 
     async def calc_category_price(self, price: str | float | int, node_id: str | int) -> dict[str, Any]:
         headers = {"X-Requested-With": "XMLHttpRequest"}
-        r = await self.client.request("POST", "/lots/calc", data={"nodeId": node_id, "price": price}, headers=headers)
+        r = await self._account._request_engine.execute(
+            "POST", "/lots/calc", data={"nodeId": node_id, "price": price}, headers=headers
+        )
         return cast(dict[str, Any], r.json())
 
     async def get_next_sells(self, next_page_id: str | int) -> str:
         headers = {"X-Requested-With": "XMLHttpRequest"}
-        r = await self.client.request("POST", "/orders/trade", data={"continue": next_page_id}, headers=headers)
+        r = await self._account._request_engine.execute(
+            "POST", "/orders/trade", data={"continue": next_page_id}, headers=headers
+        )
         return r.text
 
     async def get_next_purchases(self, next_page_id: str | int) -> str:

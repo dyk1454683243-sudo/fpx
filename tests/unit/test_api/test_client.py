@@ -50,6 +50,21 @@ class TestSimpleGetEndpoints:
         account._request_engine.execute.assert_awaited_once_with("GET", "/account/balance")
 
     @pytest.mark.asyncio
+    async def test_get_blocked_page(self, client, account):
+        response = make_response(status_code=404)
+        account._request_engine.execute.return_value = response
+        result = await client.get_blocked_page()
+        assert result is response
+        account._request_engine.execute.assert_awaited_once_with("GET", "/account/blocked")
+        
+    @pytest.mark.asyncio
+    async def test_get_2fa_settings_page(self, client, account):
+        account._request_engine.execute.return_value = make_response(text="2fa-html")
+        result = await client.get_2fa_settings_page()
+        assert result == "2fa-html"
+        account._request_engine.execute.assert_awaited_once_with("GET", "/security/twoFactorSetting")
+
+    @pytest.mark.asyncio
     async def test_get_current_chat(self, client, account):
         account._request_engine.execute.return_value = make_response(text="chat-html")
         result = await client.get_current_chat("123")
@@ -190,6 +205,17 @@ class TestOrderAndReviewEndpoints:
         assert args == ("POST", "/orders/review")
         assert kwargs["data"] == {"authorId": "author-1", "text": "спасибо", "rating": "", "orderId": "order-1"}
 
+    @pytest.mark.asyncio
+    async def test_delete_review(self, client, account):
+        response = make_response(status_code=200)
+        account._request_engine.execute.return_value = response
+        result = await client.delete_review("author-1", "order-1")
+        assert result is response
+        args, kwargs = account._request_engine.execute.call_args
+        assert args == ("POST", "/orders/reviewDelete")
+        assert kwargs["data"] == {"authorId": "author-1", "orderId": "order-1"}
+        assert kwargs["headers"] == {"X-Requested-With": "XMLHttpRequest"}
+
 
 class TestEditAndCreateLot:
     @pytest.mark.asyncio
@@ -246,39 +272,47 @@ class TestEditAndCreateLot:
         assert "query" not in kwargs["data"]
 
 
-class TestDirectHttpClientEndpoints:
+class TestRequestEnginePostEndpoints:
     @pytest.mark.asyncio
-    async def test_upload_image(self, client, http_client):
-        http_client.request = AsyncMock(return_value=make_response(json_data={"fileId": 5}))
+    async def test_upload_image(self, client, account, http_client):
+        account._request_engine.execute.return_value = make_response(json_data={"fileId": 5})
         result = await client.upload_image(b"bytes")
         assert result == {"fileId": 5}
-        args, kwargs = http_client.request.call_args
+        args, kwargs = account._request_engine.execute.call_args
         assert args == ("POST", "/file/addChatImage")
-        assert kwargs["files"]["file"][0] == "image.png"
+        assert kwargs["files"]["file"] == ("image.png", b"bytes", "image/png")
+        assert kwargs["headers"]["X-Requested-With"] == "XMLHttpRequest"
+        http_client.request.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_find_category(self, client, http_client):
-        http_client.request = AsyncMock(return_value=make_response(json_data={"html": "<div></div>"}))
+    async def test_find_category(self, client, account, http_client):
+        account._request_engine.execute.return_value = make_response(json_data={"html": "<div></div>"})
         result = await client.find_category("minecraft")
         assert result == {"html": "<div></div>"}
-        args, kwargs = http_client.request.call_args
+        args, kwargs = account._request_engine.execute.call_args
         assert args == ("POST", "/games/promoFilter")
         assert kwargs["data"] == {"query": "minecraft"}
+        assert kwargs["headers"]["X-Requested-With"] == "XMLHttpRequest"
+        http_client.request.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_calc_category_price(self, client, http_client):
-        http_client.request = AsyncMock(return_value=make_response(json_data={"methods": []}))
+    async def test_calc_category_price(self, client, account, http_client):
+        account._request_engine.execute.return_value = make_response(json_data={"methods": []})
         result = await client.calc_category_price(100, "node-1")
         assert result == {"methods": []}
-        args, kwargs = http_client.request.call_args
+        args, kwargs = account._request_engine.execute.call_args
         assert args == ("POST", "/lots/calc")
         assert kwargs["data"] == {"nodeId": "node-1", "price": 100}
+        assert kwargs["headers"]["X-Requested-With"] == "XMLHttpRequest"
+        http_client.request.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_get_next_sells(self, client, http_client):
-        http_client.request = AsyncMock(return_value=make_response(text="next-page-html"))
+    async def test_get_next_sells(self, client, account, http_client):
+        account._request_engine.execute.return_value = make_response(text="next-page-html")
         result = await client.get_next_sells("page-2")
         assert result == "next-page-html"
-        args, kwargs = http_client.request.call_args
+        args, kwargs = account._request_engine.execute.call_args
         assert args == ("POST", "/orders/trade")
         assert kwargs["data"] == {"continue": "page-2"}
+        assert kwargs["headers"]["X-Requested-With"] == "XMLHttpRequest"
+        http_client.request.assert_not_called()
