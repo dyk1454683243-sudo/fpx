@@ -33,7 +33,7 @@ class ChatManager:
             step = "парсинг данных чатов"
             chats = self._account._parser.parse_chats_list(html)
         except Exception as e:
-            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         return cast(list[Chat], chats)
 
     async def send_message(self, chat_id: str, text: str, with_nodes: bool = False) -> dict[str, Any]:
@@ -61,7 +61,7 @@ class ChatManager:
                 self._account.data._node_names[chat_id], -1, text
             )
         except Exception as e:
-            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         if response.get("error") is None:
             return cast(dict[str, Any], response)
         else:
@@ -95,7 +95,7 @@ class ChatManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_chat(html)
         except Exception as e:
-            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}") from e
         good_msg_list: list[Message] = []
         if data.get("messages"):
             message_list = []
@@ -152,7 +152,7 @@ class ChatManager:
                 self._account.data._node_names[chat_id], -1, image_id
             )
         except Exception as e:
-            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         if response.get("error") is None:
             return cast(dict[str, Any], response)
         else:

@@ -277,9 +277,10 @@ class TestRequestEngineTimeouts:
     async def test_post_read_timeout_raises_fpx_request_error_immediately(self, account, http_client):
         http_client.request = AsyncMock(side_effect=httpx.ReadTimeout("timeout"))
         engine = RequestEngine(account, http_client)
-        with pytest.raises(fpx_err.FpxRequestError):
+        with pytest.raises(fpx_err.FpxRequestError) as exc:
             await engine.execute("POST", "/runner/", data={})
         assert http_client.request.await_count == 1
+        assert isinstance(exc.value.__cause__, httpx.ReadTimeout)
 
     @pytest.mark.asyncio
     async def test_connect_error_retries_then_raises(self, account, http_client, monkeypatch):
