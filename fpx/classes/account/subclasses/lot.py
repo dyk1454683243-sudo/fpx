@@ -36,7 +36,7 @@ class LotManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_edit_lot_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLotEditorInfoError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetLotEditorInfoError(f"При выполнении {stage} произошла ошибка: {e}") from e
         base_fields = ["csrf_token", "form_created_at", "offer_id", "node_id", "location", "deleted"]
         main_data = {k: v for k, v in data.items() if k in base_fields}
         other_fields = {k: v for k, v in data.items() if k not in base_fields}
@@ -58,7 +58,7 @@ class LotManager:
             stage = "запросе данных"
             data = await self._get_lot_editor_details(lot_id)
         except Exception as e:
-            raise fpx_err.FpxGetLotInfoError(f"При {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetLotInfoError(f"При {stage} произошла ошибка: {e}") from e
         return str(data.fields["secrets"]).split("\n")
 
     async def get_lot_info(self, lot_id: int | str) -> CurrentLotInfo:
@@ -89,7 +89,7 @@ class LotManager:
             )
             lot._client = self._account
         except Exception as e:
-            raise fpx_err.FpxGetLotInfoError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetLotInfoError(f"При выполнении {stage} произошла ошибка: {e}") from e
         return lot
 
     async def raise_lots(self) -> list[Any]:
@@ -114,7 +114,7 @@ class LotManager:
                 response.append(await self._account._client.raise_lot(node_id, game_id))
             return response
         except Exception as e:
-            raise fpx_err.FpxRaisingLotError(message=str(e))
+            raise fpx_err.FpxRaisingLotError(message=str(e)) from e
 
     async def get_node_editor_data(self, node_id: int | str) -> LotCreationFields:
         """
@@ -135,7 +135,7 @@ class LotManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_create_lot_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLotEditorInfoError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetLotEditorInfoError(f"При выполнении {stage} произошла ошибка: {e}") from e
         base_fields = ["csrf_token", "form_created_at", "offer_id", "node_id", "location", "deleted"]
         main_data = {f"_{k}": v for k, v in data.items() if k in base_fields}
         other_fields: list[LotField] = []
@@ -177,4 +177,4 @@ class LotManager:
             else:
                 raise fpx_err.FpxRequestError(f"Сервер не ответил успешно. Код ошибки: {response.status_code}")
         except Exception as e:
-            raise fpx_err.FpxLotCreateError(f"При создании лота произошла ошибка: {e}")
+            raise fpx_err.FpxLotCreateError(f"При создании лота произошла ошибка: {e}") from e

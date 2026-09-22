@@ -34,7 +34,7 @@ class CategoryManager:
             stage = "парсингa данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}") from e
         result: list[CategoryLastLot] = []
         for el in data:
             result.append(CategoryLastLot(category_id=str(lot_category_id), **el))
@@ -63,7 +63,7 @@ class CategoryManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_category_page(html)
         except Exception as e:
-            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetLastCategoryLotError(f"При выполнении {stage} произошла ошибка: {e}") from e
         result: list[CategoryLastLot] = []
         for el in data:
             result.append(CategoryLastLot(category_id=str(chip_category_id), **el))
@@ -90,7 +90,7 @@ class CategoryManager:
             html = await self._account._client.get_main_menu()
             data = self._account._parser.parse_all_categories(html)
         except Exception as e:
-            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
+            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}") from e
         return cast(list[Game], data)
 
     async def find_category(self, target: str) -> list[Game]:
@@ -120,5 +120,5 @@ class CategoryManager:
             html = await self._account._client.find_category(target)
             data = self._account._parser.parse_all_categories(html["html"])
         except Exception as e:
-            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}")
+            raise fpx_err.FpxRequestError(f"При сборе всех категорий произошла ошибка: {e}") from e
         return cast(list[Game], data)

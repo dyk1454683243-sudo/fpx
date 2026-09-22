@@ -33,7 +33,7 @@ class ChatManager:
             step = "парсинг данных чатов"
             chats = self._account._parser.parse_chats_list(html)
         except Exception as e:
-            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxGetChatsError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         return cast(list[Chat], chats)
 
     async def send_message(self, chat_id: str, text: str, with_nodes: bool = False) -> dict[str, Any]:
@@ -61,7 +61,7 @@ class ChatManager:
                 self._account.data._node_names[chat_id], -1, text
             )
         except Exception as e:
-            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         if response.get("error") is None:
             return cast(dict[str, Any], response)
         else:
@@ -95,7 +95,7 @@ class ChatManager:
             stage = "парсинга данных"
             data = self._account._parser.parse_chat(html)
         except Exception as e:
-            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}")
+            raise fpx_err.FpxGetChatDataError(f"При выполнении {stage} произошла ошибка: {e}") from e
         good_msg_list: list[Message] = []
         if data.get("messages"):
             message_list = []
@@ -152,10 +152,44 @@ class ChatManager:
                 self._account.data._node_names[chat_id], -1, image_id
             )
         except Exception as e:
-            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}")
+            raise fpx_err.FpxMessageDeliverError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
         if response.get("error") is None:
             return cast(dict[str, Any], response)
         else:
             error_code = response.get("error", "400")
             error_msg = response.get("msg", "Неизвестная ошибка")
             raise fpx_err.FpxMessageDeliverError(f"Сервер вернул ошибку: {error_code} - {error_msg}")
+
+    async def ban_chat(self, chat_id: int | str) -> bool:
+        """
+        Блокирует чат (кнопка «Заблокировать» в шапке чата FunPay).
+
+        FunPay выполняет блокировку через ``POST /chat/mute`` с ``mute=1``.
+
+        Args:
+            chat_id (int | str): ID чата (node / data-id). Если передан
+                системный ``users-...``, числовой ``data-id`` берётся со страницы чата.
+        Returns:
+            bool: True если чат заблокирован.
+        Raises:
+            FpxBanChatError: Не удалось заблокировать чат.
+        """
+        node_id = str(chat_id)
+        step = f"блокировка чата ID {chat_id}"
+        try:
+            if not node_id.isdigit():
+                step = f"запрос данных чата ID {chat_id}"
+                html = await self._account._client.get_current_chat(chat_id)
+                data = self._account._parser.parse_chat(html)
+                parsed_id = data.get("data-id")
+                if parsed_id:
+                    node_id = str(parsed_id)
+            step = f"POST запрос на блокировку чата ID {node_id}"
+            response = await self._account._client.ban_chat(node_id)
+        except Exception as e:
+            raise fpx_err.FpxBanChatError(f"Не удалось выполнить {step}. Ошибка: {e}") from e
+        if response.get("error") is None:
+            return True
+        error_code = response.get("error", "400")
+        error_msg = response.get("msg", "Неизвестная ошибка")
+        raise fpx_err.FpxBanChatError(f"Сервер вернул ошибку: {error_code} - {error_msg}")
